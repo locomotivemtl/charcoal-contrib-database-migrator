@@ -34,7 +34,7 @@ A [Charcoal][charcoal-app] service provider my cool feature.
 The preferred (and only supported) method is with Composer:
 
 ```shell
-$ composer require locomotivemtl/charcoal-contrib-foobar
+$ composer require locomotivemtl/charcoal-contrib-database-migrator
 ```
 
 
@@ -69,8 +69,14 @@ $ composer require locomotivemtl/charcoal-contrib-foobar
 
 ## Configuration
 
---TBD--
-
+In your project's config file, require the migrator module like so : 
+```json
+{
+    "modules": {
+        "charcoal/migrator/migrator": {}
+    }
+}
+```
 
 
 ## Usage
