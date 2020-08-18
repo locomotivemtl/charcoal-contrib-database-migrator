@@ -1,16 +1,24 @@
 {
     "type": "library",
-    "name": "locomotivemtl/charcoal-contrib-foobar",
-    "description": "Charcoal service provider for my cool feature.",
+    "name": "locomotivemtl/charcoal-contrib-database-migrator",
+    "description": "Charcoal service provider database migration using patches.",
     "keywords": [
         "charcoal"
     ],
-    "homepage": "https://locomotivemtl.github.io/charcoal-contrib-foobar/",
+    "homepage": "https://github.com/locomotivemtl/charcoal-contrib-database-migrator/",
     "license": "MIT",
     "authors": [
         {
             "name": "Locomotive",
             "homepage": "https://locomotive.ca"
+        },
+        {
+            "name": "Benjamin Roch",
+            "email": "benjamin@locomotive.ca"
+        },
+        {
+            "name": "Joel Alphonso",
+            "email": "joel@locomotive.ca"
         }
     ],
     "minimum-stability": "dev",
