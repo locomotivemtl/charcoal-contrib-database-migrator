@@ -35,7 +35,7 @@ class MigratorServiceProvider implements ServiceProviderInterface
          * @return Migrator
          */
         $container['charcoal/database-migrator'] = function (Container $container) {
-            return new Migrator($container['database'], $container['charcoal/database-migrator/patches']);
+            return new Migrator($container['database']);
         };
 
         /**

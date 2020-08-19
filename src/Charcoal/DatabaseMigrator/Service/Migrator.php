@@ -56,7 +56,7 @@ class Migrator
      * @param PDO   $pdo     Database connector.
      * @param array $patches All the patches found.
      */
-    public function __construct(PDO $pdo, array $patches)
+    public function __construct(PDO $pdo, array $patches = [])
     {
         $this->setPdo($pdo);
         $this->setPatches($patches);
