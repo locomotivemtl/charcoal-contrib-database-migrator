@@ -129,16 +129,21 @@ class Migrator
     /**
      * @return integer|string
      */
-    protected function checkDbVersion()
+    public function checkDbVersion()
     {
+        if (isset($this->dbVersion)) {
+            return $this->dbVersion;
+        }
+
         $q      = strtr('SHOW TABLES LIKE "%table"', ['%table' => self::DB_VERSION_TABLE_NAME]);
         $sth    = $this->pdo()->query($q);
         $exists = $sth->fetchColumn(0);
 
         if (!$exists) {
             $this->pdo()->query($this->tableSkeleton());
+            $this->dbVersion = 0;
 
-            return 0;
+            return $this->dbVersion;
         }
 
         $q = strtr(
@@ -148,7 +153,9 @@ class Migrator
 
         $result = $this->pdo()->query($q)->fetch();
 
-        return $result['version'];
+        $this->dbVersion = ($result['version'] ?? 0);
+
+        return $this->dbVersion;
     }
 
     /**
@@ -246,11 +253,12 @@ class Migrator
     }
 
     /**
+     * @param string|null $patch The patch ident.
      * @return array
      */
-    public function feedback(): array
+    public function feedback($patch = null): array
     {
-        return $this->feedback;
+        return ($this->feedback[$patch] ?? $this->feedback);
     }
 
     /**
@@ -280,11 +288,12 @@ class Migrator
     }
 
     /**
+     * @param string|null $patch The patch ident.
      * @return array
      */
-    public function errors(): array
+    public function errors($patch = null): array
     {
-        return $this->errors;
+        return ($this->errors[$patch] ?? $this->errors);
     }
 
     /**
