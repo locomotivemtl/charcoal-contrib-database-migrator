@@ -13,6 +13,8 @@ use Charcoal\DatabaseMigrator\ServiceProvider\MigratorServiceProvider;
  */
 class MigratorModule extends AbstractModule
 {
+    const ADMIN_CONFIG = 'vendor/locomotivemtl/charcoal-contrib-database-migrator/config/admin.json';
+
     /**
      * Setup the module's dependencies.
      *

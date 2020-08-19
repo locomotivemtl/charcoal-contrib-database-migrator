@@ -1,0 +1,11 @@
+{
+    "admin": {
+        "routes": {
+            "scripts": {
+                "patch/database": {
+                    "ident": "charcoal/database-migrator/script/patch-database"
+                }
+            }
+        }
+    }
+}
