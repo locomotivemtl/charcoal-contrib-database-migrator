@@ -1,13 +1,14 @@
 <?php
 
-namespace Charcoal\Migrator\ServiceProvider;
+namespace Charcoal\DatabaseMigrator\ServiceProvider;
 
 // from 'charcoal-factory'
 use Charcoal\Factory\FactoryInterface;
 use Charcoal\Factory\GenericFactory as Factory;
 
 // local dependencies
-use Charcoal\Migrator\AbstractPatch;
+use Charcoal\DatabaseMigrator\AbstractPatch;
+use Charcoal\DatabaseMigrator\Service\Migrator;
 
 // from 'pimple'
 use Pimple\Container;

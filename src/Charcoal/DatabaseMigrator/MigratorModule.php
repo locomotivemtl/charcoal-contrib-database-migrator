@@ -1,12 +1,12 @@
 <?php
 
-namespace Charcoal\Migrator;
+namespace Charcoal\DatabaseMigrator;
 
 // from 'charcoal-app'
 use Charcoal\App\Module\AbstractModule;
 
 // local dependencies
-use Charcoal\Migrator\ServiceProvider\MigratorServiceProvider;
+use Charcoal\DatabaseMigrator\ServiceProvider\MigratorServiceProvider;
 
 /**
  * Migrator Module
