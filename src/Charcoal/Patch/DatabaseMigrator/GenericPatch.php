@@ -14,20 +14,38 @@ final class GenericPatch extends AbstractPatch
     /**
      * Apply migration
      *
-     * @return mixed
+     * @return void
      */
-    public function up()
+    public function up(): void
     {
-
     }
 
     /**
      * Revert migration
      *
-     * @return mixed
+     * @return void
      */
-    public function down()
+    public function down(): void
     {
+    }
 
+    /**
+     * Short description of what the patch will do.
+     *
+     * @return string
+     */
+    public function description()
+    {
+        return 'This is an example patch that does nothing at all';
+    }
+
+    /**
+     * The author of the patch.
+     *
+     * @return string
+     */
+    public function author()
+    {
+        return 'Joel Alphonso';
     }
 }

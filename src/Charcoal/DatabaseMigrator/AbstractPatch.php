@@ -5,6 +5,9 @@ namespace Charcoal\DatabaseMigrator;
 // from 'charcoal-app'
 use Charcoal\App\Config\DatabaseConfig;
 
+// from 'charcoal-config'
+use Charcoal\Config\AbstractEntity;
+
 // from 'charcoal-core'
 use Charcoal\Model\ModelInterface;
 use Charcoal\Source\DatabaseSource;
@@ -25,7 +28,7 @@ use Pimple\Container;
  *  - up : update to specified version;
  *  - down : revert from specified version;
  */
-abstract class AbstractPatch
+abstract class AbstractPatch extends AbstractEntity
 {
     /**
      * @var PDO $pdo
@@ -175,14 +178,29 @@ abstract class AbstractPatch
     /**
      * Apply migration
      *
-     * @return mixed
+     * @return void
      */
-    abstract public function up();
+    abstract public function up(): void;
 
     /**
      * Revert migration
      *
-     * @return mixed
+     * @return void
      */
-    abstract public function down();
+    abstract public function down(): void;
+
+    /**
+     * Short description of what the patch will do.
+     *
+     * @return string
+     */
+    abstract public function description();
+
+
+    /**
+     * The author of the patch.
+     *
+     * @return string
+     */
+    abstract public function author();
 }
