@@ -1,6 +1,6 @@
 <?php
 
-namespace Charcoal\Migrator;
+namespace Charcoal\DatabaseMigrator;
 
 // from 'charcoal-app'
 use Charcoal\App\Config\DatabaseConfig;
@@ -8,6 +8,8 @@ use Charcoal\App\Config\DatabaseConfig;
 // from 'charcoal-core'
 use Charcoal\Model\ModelInterface;
 use Charcoal\Source\DatabaseSource;
+
+use Exception;
 
 // from PDO
 use PDO;
@@ -49,9 +51,14 @@ abstract class AbstractPatch
      * AbstractPatch constructor.
      *
      * @param array $data Dependencies.
+     * @throws Exception When the DB_VERSION const is missing.
      */
     public function __construct(array $data)
     {
+        if (!defined('static::DB_VERSION')) {
+            throw new Exception(sprintf('The patch [%s] is missing the "DB_VERSION" const', static::class));
+        }
+
         $this->setPdo($data['database']);
         $this->setDatabaseConfig($data['database/config']);
 
