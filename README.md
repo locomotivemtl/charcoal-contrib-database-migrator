@@ -1,8 +1,8 @@
-Charcoal FooBar
+Charcoal DatabaseMigrator
 ===============
 
-[![License][badge-license]][charcoal-contrib-foobar]
-[![Latest Stable Version][badge-version]][charcoal-contrib-foobar]
+[![License][badge-license]][charcoal-contrib-database-migrator]
+[![Latest Stable Version][badge-version]][charcoal-contrib-database-migrator]
 [![Code Quality][badge-scrutinizer]][dev-scrutinizer]
 [![Coverage Status][badge-coveralls]][dev-coveralls]
 [![Build Status][badge-travis]][dev-travis]
@@ -104,9 +104,9 @@ $ composer test
 ### API Documentation
 
 -   The auto-generated `phpDocumentor` API documentation is available at:  
-    [https://locomotivemtl.github.io/charcoal-contrib-foobar/docs/master/](https://locomotivemtl.github.io/charcoal-contrib-foobar/docs/master/)
+    [https://locomotivemtl.github.io/charcoal-contrib-database-migrator/docs/master/](https://locomotivemtl.github.io/charcoal-contrib-database-migrator/docs/master/)
 -   The auto-generated `apigen` API documentation is available at:  
-    [https://codedoc.pub/locomotivemtl/charcoal-contrib-foobar/master/](https://codedoc.pub/locomotivemtl/charcoal-contrib-foobar/master/index.html)
+    [https://codedoc.pub/locomotivemtl/charcoal-contrib-database-migrator/master/](https://codedoc.pub/locomotivemtl/charcoal-contrib-database-migrator/master/index.html)
 
 
 
@@ -120,7 +120,7 @@ $ composer test
 
 ### Coding Style
 
-The charcoal-contrib-foobar module follows the Charcoal coding-style:
+The charcoal-contrib-database-migrator module follows the Charcoal coding-style:
 
 -   [_PSR-1_][psr-1]
 -   [_PSR-2_][psr-2]
@@ -144,18 +144,18 @@ Charcoal is licensed under the MIT license. See [LICENSE](LICENSE) for details.
 
 
 
-[charcoal-contrib-foobar]:  https://packagist.org/packages/locomotivemtl/charcoal-contrib-foobar
+[charcoal-contrib-database-migrator]:  https://packagist.org/packages/locomotivemtl/charcoal-contrib-database-migrator
 [charcoal-app]:             https://packagist.org/packages/locomotivemtl/charcoal-app
 
-[dev-scrutinizer]:    https://scrutinizer-ci.com/g/locomotivemtl/charcoal-contrib-foobar/
-[dev-coveralls]:      https://coveralls.io/r/locomotivemtl/charcoal-contrib-foobar
-[dev-travis]:         https://travis-ci.org/locomotivemtl/charcoal-contrib-foobar
+[dev-scrutinizer]:    https://scrutinizer-ci.com/g/locomotivemtl/charcoal-contrib-database-migrator/
+[dev-coveralls]:      https://coveralls.io/r/locomotivemtl/charcoal-contrib-database-migrator
+[dev-travis]:         https://travis-ci.org/locomotivemtl/charcoal-contrib-database-migrator
 
-[badge-license]:      https://img.shields.io/packagist/l/locomotivemtl/charcoal-contrib-foobar.svg?style=flat-square
-[badge-version]:      https://img.shields.io/packagist/v/locomotivemtl/charcoal-contrib-foobar.svg?style=flat-square
-[badge-scrutinizer]:  https://img.shields.io/scrutinizer/g/locomotivemtl/charcoal-contrib-foobar.svg?style=flat-square
-[badge-coveralls]:    https://img.shields.io/coveralls/locomotivemtl/charcoal-contrib-foobar.svg?style=flat-square
-[badge-travis]:       https://img.shields.io/travis/locomotivemtl/charcoal-contrib-foobar.svg?style=flat-square
+[badge-license]:      https://img.shields.io/packagist/l/locomotivemtl/charcoal-contrib-database-migrator.svg?style=flat-square
+[badge-version]:      https://img.shields.io/packagist/v/locomotivemtl/charcoal-contrib-database-migrator.svg?style=flat-square
+[badge-scrutinizer]:  https://img.shields.io/scrutinizer/g/locomotivemtl/charcoal-contrib-database-migrator.svg?style=flat-square
+[badge-coveralls]:    https://img.shields.io/coveralls/locomotivemtl/charcoal-contrib-database-migrator.svg?style=flat-square
+[badge-travis]:       https://img.shields.io/travis/locomotivemtl/charcoal-contrib-database-migrator.svg?style=flat-square
 
 [psr-1]:  https://www.php-fig.org/psr/psr-1/
 [psr-2]:  https://www.php-fig.org/psr/psr-2/
