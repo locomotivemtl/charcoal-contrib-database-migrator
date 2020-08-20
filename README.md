@@ -15,11 +15,11 @@ A [Charcoal][charcoal-app] service provider my cool feature.
 
 -   [Installation](#installation)
     -   [Dependencies](#dependencies)
--   [Service Provider](#service-provider)
-    -   [Parameters](#parameters)
-    -   [Services](#services)
 -   [Configuration](#configuration)
 -   [Usage](#usage)
+    - [Running the migration](#running-the-migration)
+    - [Creating new Patches](#creating-new-patches)
+    - [Injecting Patches to the migrator](#injecting-patches-to-the-migrator)
 -   [Development](#development)
     -  [API Documentation](#api-documentation)
     -  [Development Dependencies](#development-dependencies)
@@ -43,27 +43,14 @@ $ composer require locomotivemtl/charcoal-contrib-database-migrator
 
 #### Required
 
--   [**PHP 7.1+**](https://php.net): _PHP 7.3+_ is recommended.
+-   [**PHP 7.2+**](https://php.net): _PHP 7.3+_ is recommended.
 
 
 
 #### PSR
 
---TBD--
-
-
-
-## Service Provider
-
-### Parameters
-
---TBD--
-
-
-
-### Services
-
---TBD--
+-   [**PSR-7**][psr-7]: Common interface for HTTP messages. Fulfilled by Slim.
+-   [**PSR-11**][psr-11]: Common interface for dependency containers. Fulfilled by Pimple.
 
 
 
@@ -81,8 +68,67 @@ In your project's config file, require the migrator module like so :
 
 ## Usage
 
---TBD--
+### Running the migration
 
+Simply run this command in the console to lunch the migration process
+```shell
+$ vendor/bin/charcoal admin/patch/database
+```
+
+The CLI UI will guide you step by step.
+
+
+### Creating new Patches
+
+A patch should always extend [**AbstractPatch**](src/Charcoal/DatabaseMigrator/AbstractPatch.php)
+
+[**GenericPatch**](src/Charcoal/Patch/DatabaseMigrator/GenericPatch.php) can be used as a starting point when creating new patches.
+Just copy and paste it the package in need of a new patch.
+
+A patch should always be named ``PatchYYYYMMDDHHMMSS.php`` to facilitate readability.
+
+A patch file consist of a PHP class which follows these guidelines : 
+
+- Be namespaced ``Charcoal\\Patch\\..``
+- Have a ``DB_VERSION`` const which equals the timestamp of the commit this patch is fixing
+- Have an ``up`` and ``down`` method for the migration tool to process the migration when going up in version or down.
+- Have a ``descripion`` and ``author`` method to briefly document the patch
+
+### Injecting Patches to the migrator
+
+Let's say with want to include the following 2 patches in the migrator: 
+
+- ``Charcoal/Patch/FooBar/Patch20200101120000.php``
+- ``Charcoal/Patch/FooBar/Patch20200110120000.php``
+
+In the FooBar's package ServiceProvider, do the following :
+
+```PHP
+    /**
+     * List of patches for the foo-bar package.
+     *
+     * @param Container $container
+     * @return array
+     */
+    $container['charcoal/foo-bar/patches'] = function (Container $container) {
+        return [
+            $container['patch/factory']->create('foo-bar/patch20200101120000'),
+            $container['patch/factory']->create('foo-bar/patch20200110120000')
+        ];
+    };
+
+    /**
+     * Extend the migrator to add this package patches.
+     */
+    $container['charcoal/database-migrator'] = $container->extend(
+        'charcoal/database-migrator',
+        function (Migrator $migrator, Container $container) {
+            $migrator->addPatches($container['charcoal/foo-bar/patches']);
+
+            return $migrator;
+        }
+    );
+```
 
 
 ## Development
