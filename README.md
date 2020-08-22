@@ -94,41 +94,26 @@ A patch file consist of a PHP class which follows these guidelines :
 - Have an ``up`` and ``down`` method for the migration tool to process the migration when going up in version or down.
 - Have a ``descripion`` and ``author`` method to briefly document the patch
 
-### Injecting Patches to the migrator
-
-Let's say with want to include the following 2 patches in the migrator: 
-
-- ``Charcoal/Patch/FooBar/Patch20200101120000.php``
-- ``Charcoal/Patch/FooBar/Patch20200110120000.php``
-
-In the FooBar's package ServiceProvider, do the following :
+you can implement the setDependencies method on a patch.
 
 ```PHP
-    /**
-     * List of patches for the foo-bar package.
+     /**
+     * Inject dependencies from a DI Container.
      *
-     * @param Container $container
-     * @return array
+     * @param Container $container A Pimple DI service container.
+     * @return void
      */
-    $container['charcoal/foo-bar/patches'] = function (Container $container) {
-        return [
-            $container['patch/factory']->create('foo-bar/patch20200101120000'),
-            $container['patch/factory']->create('foo-bar/patch20200110120000')
-        ];
-    };
-
-    /**
-     * Extend the migrator to add this package patches.
-     */
-    $container['charcoal/database-migrator'] = $container->extend(
-        'charcoal/database-migrator',
-        function (Migrator $migrator, Container $container) {
-            $migrator->addPatches($container['charcoal/foo-bar/patches']);
-
-            return $migrator;
-        }
-    );
+    protected function setDependencies(Container $container)
+    {
+        // This method is a stub.
+        // Reimplement in children method to inject dependencies in your class from a Pimple container.
+    }
 ```
+
+### Injecting Patches to the migrator
+
+As long as the patch follows the guidelines described above, it'll be automatically parsed by the migrator.
+No need to do anything more than that.
 
 
 ## Development
