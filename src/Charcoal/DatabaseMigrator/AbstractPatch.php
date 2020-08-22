@@ -194,7 +194,7 @@ abstract class AbstractPatch extends AbstractEntity
      *
      * @return string
      */
-    abstract public function description();
+    abstract public function description(): string;
 
 
     /**
@@ -202,5 +202,5 @@ abstract class AbstractPatch extends AbstractEntity
      *
      * @return string
      */
-    abstract public function author();
+    abstract public function author(): string;
 }

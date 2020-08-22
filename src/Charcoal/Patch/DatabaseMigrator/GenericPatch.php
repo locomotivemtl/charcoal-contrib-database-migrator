@@ -34,7 +34,7 @@ final class GenericPatch extends AbstractPatch
      *
      * @return string
      */
-    public function description()
+    public function description(): string
     {
         return 'This is an example patch that does nothing at all';
     }
@@ -44,7 +44,7 @@ final class GenericPatch extends AbstractPatch
      *
      * @return string
      */
-    public function author()
+    public function author(): string
     {
         return 'Joel Alphonso';
     }
