@@ -7,11 +7,19 @@ use Charcoal\App\Script\AbstractScript;
 use Charcoal\App\Script\CronScriptInterface;
 use Charcoal\App\Script\CronScriptTrait;
 
+// From 'charcoal-config'
+use Charcoal\Config\ConfigInterface;
+
 // Local dependencies
 use Charcoal\DatabaseMigrator\Service\Migrator;
 
+// From 'charcoal-factory'
+use Charcoal\Factory\FactoryInterface;
+
 // From pimple
 use Pimple\Container;
+
+use Exception;
 
 // From Psr-7
 use Psr\Http\Message\RequestInterface;
@@ -30,12 +38,24 @@ class PatchDatabaseScript extends AbstractScript implements CronScriptInterface
     protected $migrator;
 
     /**
+     * @var ConfigInterface
+     */
+    protected $config;
+
+    /**
+     * @var FactoryInterface
+     */
+    protected $patchFactory;
+
+    /**
      * @param Container $container A Pimple DI Container instance.
      * @return void
      */
     protected function setDependencies(Container $container)
     {
-        $this->migrator = $container['charcoal/database-migrator'];
+        $this->migrator     = $container['charcoal/database-migrator'];
+        $this->patchFactory = $container['patch/factory'];
+        $this->config       = $container['config'];
     }
 
     /**
@@ -46,6 +66,9 @@ class PatchDatabaseScript extends AbstractScript implements CronScriptInterface
     public function run(RequestInterface $request, ResponseInterface $response)
     {
         unset($request);
+
+        $this->migrator->addPatches($this->searchPatches());
+
         $currentVersion = $this->migrator->checkDbVersion();
         $patches        = $this->migrator->availablePatches();
 
@@ -54,7 +77,7 @@ class PatchDatabaseScript extends AbstractScript implements CronScriptInterface
 
         foreach ($patches as $patch) {
             $list[] = [
-                'Version'     => $patch::DB_VERSION,
+                'Version'     => '<green>'.$patch::DB_VERSION.'</green>',
                 'Description' => $patch['description'],
                 'Author'      => $patch['author'],
             ];
@@ -148,7 +171,12 @@ class PatchDatabaseScript extends AbstractScript implements CronScriptInterface
         $progress = $this->climate()->progress(count($patches) + 1);
 
         foreach ($patches as $patch) {
-            $progress->advance(1, 'Processing patch : <blue><bold>'.$patch::DB_VERSION.'</bold> | test | author</blue>');
+            $progress->advance(1, sprintf(
+                'Processing patch : <blue>%s | %s | %s</blue>',
+                $patch::DB_VERSION,
+                $patch['description'],
+                $patch['author']
+            ));
             if ($this->interactive()) {
                 $input = $this->climate()->blue()->input(
                     'Proceed ? '.
@@ -228,5 +256,88 @@ class PatchDatabaseScript extends AbstractScript implements CronScriptInterface
         }
 
         return $response;
+    }
+
+    /**
+     * Searches for Patch files located in project or vendors
+     * given they are located in src/Charcoal/Patch/*
+     *
+     * @return array
+     */
+    private function searchPatches()
+    {
+        $base = $this->base();
+
+        $glob = $this->globRecursive($base.'{vendor/locomotivemtl/*/,}src/Charcoal/Patch/Patch*.php');
+
+        // Create patch models
+        return array_map(function ($patch) {
+            $patch = preg_replace('/.*\/Charcoal\/Patch\//', '', $patch);
+            $patch = rtrim($patch, '.php');
+
+            try {
+                return $this->patchFactory->create($this->generateMetadataIdent($patch));
+            } catch (Exception $e) {
+                $this->climate()->error($e->getMessage());
+
+                return [];
+            }
+        }, $glob);
+    }
+
+    /**
+     * @param string  $pattern The pattern to search.
+     * @param integer $flags   The glob flags.
+     * @return array
+     * @see http://in.php.net/manual/en/function.glob.php#106595
+     */
+    public function globRecursive($pattern, $flags = 0)
+    {
+        $max   = $this->maxRecursiveLevel();
+        $i     = 1;
+        $files = glob($pattern, $flags);
+        foreach (glob(dirname($pattern).'/*', (GLOB_ONLYDIR | GLOB_NOSORT | GLOB_BRACE)) as $dir) {
+            $files = array_merge($files, $this->globRecursive($dir.'/'.basename($pattern), $flags));
+            $i++;
+            if ($i >= $max) {
+                break;
+            }
+        }
+
+        return $files;
+    }
+
+    /**
+     * Generate a metadata identifier from the subject class name (FQN).
+     *
+     * Converts the subject class name from camelCase to kebab-case.
+     *
+     * @param string $subject The subject string.
+     * @return string
+     */
+    protected function generateMetadataIdent($subject)
+    {
+        $ident = preg_replace('/([a-z])([A-Z])/', '$1-$2', $subject);
+        $ident = strtolower(str_replace('\\', '/', $ident));
+
+        return $ident;
+    }
+
+    /**
+     * BASE URL
+     * Realpath
+     * @return string
+     */
+    public function base()
+    {
+        return realpath($this->config->get('base_path')).'/';
+    }
+
+    /**
+     * @return integer
+     */
+    public function maxRecursiveLevel()
+    {
+        return 4;
     }
 }

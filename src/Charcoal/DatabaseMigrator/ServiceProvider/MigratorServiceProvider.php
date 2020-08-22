@@ -39,28 +39,6 @@ class MigratorServiceProvider implements ServiceProviderInterface
         };
 
         /**
-         * Extend the migrator to add this package patches.
-         */
-        $container['charcoal/database-migrator'] = $container->extend(
-            'charcoal/database-migrator',
-            function (Migrator $migrator, Container $container) {
-                $migrator->addPatches($container['charcoal/database-migrator/patches']);
-
-                return $migrator;
-            }
-        );
-
-        /**
-         * @param Container $container
-         * @return array
-         */
-        $container['charcoal/database-migrator/patches'] = function (Container $container) {
-            return [
-                $container['patch/factory']->create('database-migrator/generic-patch')
-            ];
-        };
-
-        /**
          * @param Container $container A Pimple DI container.
          * @return FactoryInterface
          */
