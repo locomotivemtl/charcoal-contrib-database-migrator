@@ -38,6 +38,13 @@ class MigratorServiceProvider implements ServiceProviderInterface
             return new Migrator($container['database']);
         };
 
+        $container['charcoal/database-migrator/patch/finder'] = function (Container $container) {
+            return new PatchFinder([
+                'config'        => $container['config'],
+                'patch/factory' => $container['charcoal/database-migrator/patch/factory'],
+            ]);
+        };
+
         /**
          * @param Container $container A Pimple DI container.
          * @return FactoryInterface

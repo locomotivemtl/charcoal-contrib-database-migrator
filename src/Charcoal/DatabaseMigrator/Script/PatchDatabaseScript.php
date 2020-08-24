@@ -7,14 +7,10 @@ use Charcoal\App\Script\AbstractScript;
 use Charcoal\App\Script\CronScriptInterface;
 use Charcoal\App\Script\CronScriptTrait;
 
-// From 'charcoal-config'
-use Charcoal\Config\ConfigInterface;
-
 // Local dependencies
+use Charcoal\DatabaseMigrator\Exception\InvalidPatchException;
 use Charcoal\DatabaseMigrator\Service\Migrator;
-
-// From 'charcoal-factory'
-use Charcoal\Factory\FactoryInterface;
+use Charcoal\DatabaseMigrator\Service\PatchFinder;
 
 // From pimple
 use Pimple\Container;
@@ -38,14 +34,9 @@ class PatchDatabaseScript extends AbstractScript implements CronScriptInterface
     protected $migrator;
 
     /**
-     * @var ConfigInterface
+     * @var PatchFinder
      */
-    protected $config;
-
-    /**
-     * @var FactoryInterface
-     */
-    protected $patchFactory;
+    protected $patchFinder;
 
     /**
      * @param Container $container A Pimple DI Container instance.
@@ -53,9 +44,8 @@ class PatchDatabaseScript extends AbstractScript implements CronScriptInterface
      */
     protected function setDependencies(Container $container)
     {
-        $this->migrator     = $container['charcoal/database-migrator'];
-        $this->patchFactory = $container['patch/factory'];
-        $this->config       = $container['config'];
+        $this->migrator    = $container['charcoal/database-migrator/migrator'];
+        $this->patchFinder = $container['charcoal/database-migrator/patch/finder'];
     }
 
     /**
@@ -67,7 +57,15 @@ class PatchDatabaseScript extends AbstractScript implements CronScriptInterface
     {
         unset($request);
 
-        $this->migrator->addPatches($this->searchPatches());
+        try {
+            $patches = $this->patchFinder->search();
+        } catch (InvalidPatchException $e) {
+            $this->climate()->error($e->getMessage());
+
+            return $response;
+        }
+
+        $this->migrator->addPatches($patches);
 
         $currentVersion = $this->migrator->checkDbVersion();
         $patches        = $this->migrator->availablePatches();
@@ -256,88 +254,5 @@ class PatchDatabaseScript extends AbstractScript implements CronScriptInterface
         }
 
         return $response;
-    }
-
-    /**
-     * Searches for Patch files located in project or vendors
-     * given they are located in src/Charcoal/Patch/*
-     *
-     * @return array
-     */
-    private function searchPatches()
-    {
-        $base = $this->base();
-
-        $glob = $this->globRecursive($base.'{vendor/locomotivemtl/*/,}src/Charcoal/Patch/Patch*.php');
-
-        // Create patch models
-        return array_map(function ($patch) {
-            $patch = preg_replace('/.*\/Charcoal\/Patch\//', '', $patch);
-            $patch = rtrim($patch, '.php');
-
-            try {
-                return $this->patchFactory->create($this->generateMetadataIdent($patch));
-            } catch (Exception $e) {
-                $this->climate()->error($e->getMessage());
-
-                return [];
-            }
-        }, $glob);
-    }
-
-    /**
-     * @param string  $pattern The pattern to search.
-     * @param integer $flags   The glob flags.
-     * @return array
-     * @see http://in.php.net/manual/en/function.glob.php#106595
-     */
-    public function globRecursive($pattern, $flags = 0)
-    {
-        $max   = $this->maxRecursiveLevel();
-        $i     = 1;
-        $files = glob($pattern, $flags);
-        foreach (glob(dirname($pattern).'/*', (GLOB_ONLYDIR | GLOB_NOSORT | GLOB_BRACE)) as $dir) {
-            $files = array_merge($files, $this->globRecursive($dir.'/'.basename($pattern), $flags));
-            $i++;
-            if ($i >= $max) {
-                break;
-            }
-        }
-
-        return $files;
-    }
-
-    /**
-     * Generate a metadata identifier from the subject class name (FQN).
-     *
-     * Converts the subject class name from camelCase to kebab-case.
-     *
-     * @param string $subject The subject string.
-     * @return string
-     */
-    protected function generateMetadataIdent($subject)
-    {
-        $ident = preg_replace('/([a-z])([A-Z])/', '$1-$2', $subject);
-        $ident = strtolower(str_replace('\\', '/', $ident));
-
-        return $ident;
-    }
-
-    /**
-     * BASE URL
-     * Realpath
-     * @return string
-     */
-    public function base()
-    {
-        return realpath($this->config->get('base_path')).'/';
-    }
-
-    /**
-     * @return integer
-     */
-    public function maxRecursiveLevel()
-    {
-        return 4;
     }
 }
