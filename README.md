@@ -65,6 +65,22 @@ In your project's config file, require the migrator module like so :
 }
 ```
 
+Optionally, you can also overide some migrator configurations in the project's config file using the ```database.migrator``` key : 
+```json
+{
+    "database": {
+        "migrator": {
+            "patches": {
+                "paths": [
+                    "path/to/some/patches",
+                    "path/to/some/custom/patches"
+                ]
+            }
+        }
+    }
+}
+```
+
 
 ## Usage
 
