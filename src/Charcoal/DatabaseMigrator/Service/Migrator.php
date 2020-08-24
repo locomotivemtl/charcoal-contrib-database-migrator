@@ -188,7 +188,7 @@ class Migrator
     protected function updateDbVersionLog($v, $action = self::UP_ACTION): void
     {
         $q = strtr(
-            'INSERT INTO %table (id, `%column`, ts, action) VALUES (\'\', :v, NOW(), :action)',
+            'INSERT INTO %table (`%column`, ts, action) VALUES (:version, NOW(), :action)',
             [
                 '%table'  => self::DB_VERSION_TABLE_NAME,
                 '%column' => self::DB_VERSION_COLUMN_NAME,
@@ -196,7 +196,7 @@ class Migrator
         );
 
         $sth = $this->pdo()->prepare($q);
-        $sth->bindParam(':v', $v, PDO::PARAM_STR);
+        $sth->bindParam(':version', $v, PDO::PARAM_STR);
         $sth->bindParam(':action', $action, PDO::PARAM_STR);
         $sth->execute();
     }
