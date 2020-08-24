@@ -3,6 +3,7 @@
 namespace Charcoal\DatabaseMigrator\ServiceProvider;
 
 // from 'charcoal-factory'
+use Charcoal\DatabaseMigrator\Service\PatchFinder;
 use Charcoal\Factory\FactoryInterface;
 use Charcoal\Factory\GenericFactory as Factory;
 
@@ -34,7 +35,7 @@ class MigratorServiceProvider implements ServiceProviderInterface
          * @param Container $container
          * @return Migrator
          */
-        $container['charcoal/database-migrator'] = function (Container $container) {
+        $container['charcoal/database-migrator/migrator'] = function (Container $container) {
             return new Migrator($container['database']);
         };
 
@@ -49,7 +50,7 @@ class MigratorServiceProvider implements ServiceProviderInterface
          * @param Container $container A Pimple DI container.
          * @return FactoryInterface
          */
-        $container['patch/factory'] = function (Container $container) {
+        $container['charcoal/database-migrator/patch/factory'] = function (Container $container) {
             return new Factory([
                 'base_class'       => AbstractPatch::class,
                 'resolver_options' => [
