@@ -9,6 +9,7 @@ use Charcoal\Config\ConfigInterface;
 use Charcoal\DatabaseMigrator\Exception\InvalidPatchException;
 
 // From 'charcoal-factory'
+use Charcoal\DatabaseMigrator\MigratorConfig;
 use Charcoal\Factory\FactoryInterface;
 use Exception;
 
@@ -17,8 +18,6 @@ use Exception;
  */
 class PatchFinder
 {
-    const DEFAULT_PATCH_PATH = 'src/Charcoal/Patch';
-
     /**
      * @var ConfigInterface
      */
@@ -30,6 +29,11 @@ class PatchFinder
     protected $patchFactory;
 
     /**
+     * @var ConfigInterface|MigratorConfig
+     */
+    protected $migratorConfig;
+
+    /**
      * PatchFinder constructor.
      *
      * @param array $data Initialisation data.
@@ -37,8 +41,9 @@ class PatchFinder
      */
     public function __construct(array $data)
     {
-        $this->config       = $data['config'];
-        $this->patchFactory = $data['patch/factory'];
+        $this->config         = $data['config'];
+        $this->patchFactory   = $data['patch/factory'];
+        $this->migratorConfig = $data['migrator/config'];
     }
 
     /**
@@ -53,7 +58,7 @@ class PatchFinder
     {
         $base = $this->base();
 
-        $path = sprintf('/{vendor/locomotivemtl/*/,}%s/Patch*.php', ($path ?? self::DEFAULT_PATCH_PATH));
+        $path = sprintf('/{vendor/locomotivemtl/*/,}{%s}/Patch*.php', ($path ?? $this->defaultPaths()));
         $glob = $this->globRecursive($base.$path);
 
         // Create patch models
@@ -67,6 +72,16 @@ class PatchFinder
                 throw new InvalidPatchException($e->getMessage());
             }
         }, $glob);
+    }
+
+    /**
+     * @return string
+     */
+    private function defaultPaths()
+    {
+        $paths = $this->migratorConfig->get('patches.paths');
+
+        return implode(',', $paths);
     }
 
     /**

@@ -1,0 +1,7 @@
+{
+    "patches": {
+        "paths": [
+            "src/Charcoal/Patch"
+        ]
+    }
+}

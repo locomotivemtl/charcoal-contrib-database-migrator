@@ -3,13 +3,14 @@
 namespace Charcoal\DatabaseMigrator\ServiceProvider;
 
 // from 'charcoal-factory'
-use Charcoal\DatabaseMigrator\Service\PatchFinder;
 use Charcoal\Factory\FactoryInterface;
 use Charcoal\Factory\GenericFactory as Factory;
 
 // local dependencies
 use Charcoal\DatabaseMigrator\AbstractPatch;
+use Charcoal\DatabaseMigrator\MigratorConfig;
 use Charcoal\DatabaseMigrator\Service\Migrator;
+use Charcoal\DatabaseMigrator\Service\PatchFinder;
 
 // from 'pimple'
 use Pimple\Container;
@@ -33,6 +34,14 @@ class MigratorServiceProvider implements ServiceProviderInterface
     {
         /**
          * @param Container $container
+         * @return MigratorConfig
+         */
+        $container['charcoal/database-migrator/config'] = function (Container $container) {
+            return new MigratorConfig($container['config']['database.migrator']);
+        };
+
+        /**
+         * @param Container $container
          * @return Migrator
          */
         $container['charcoal/database-migrator/migrator'] = function (Container $container) {
@@ -41,8 +50,9 @@ class MigratorServiceProvider implements ServiceProviderInterface
 
         $container['charcoal/database-migrator/patch/finder'] = function (Container $container) {
             return new PatchFinder([
-                'config'        => $container['config'],
-                'patch/factory' => $container['charcoal/database-migrator/patch/factory'],
+                'config'          => $container['config'],
+                'patch/factory'   => $container['charcoal/database-migrator/patch/factory'],
+                'migrator/config' => $container['charcoal/database-migrator/config'],
             ]);
         };
 
