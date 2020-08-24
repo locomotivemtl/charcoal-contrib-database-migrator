@@ -70,6 +70,15 @@ class PatchDatabaseScript extends AbstractScript implements CronScriptInterface
         $currentVersion = $this->migrator->checkDbVersion();
         $patches        = $this->migrator->availablePatches();
 
+        // No patch to apply, exit,
+        if (empty($patches)) {
+            $this->climate()->info(
+                'There\'s currently no available patch for the current Database version ('.$currentVersion.')'
+            );
+
+            return $response;
+        }
+
         $list      = [];
         $processed = [];
 
@@ -84,65 +93,58 @@ class PatchDatabaseScript extends AbstractScript implements CronScriptInterface
         $this->climate()->description('Database Migrator');
         $this->climate()->info('Migrating database from version ('.$currentVersion.')');
 
-        // No patch to apply, exit,
-        if (empty($patches)) {
-            $this->climate()->info(
-                'There\'s currently no available patch for the current Database version ('.$currentVersion.')'
-            );
-        } else {
-            $input    = $this->climate()
-                             ->out('There\'s <blue>'.count($patches).'</blue> patch(es) available.')
-                             ->input('<green>(patch[p], interactive[i], list[l], abort[a], help[h])?</green>');
-            $commands = [
-                [
-                    'ident'       => 'patch',
-                    'short-code'  => 'p',
-                    'description' => 'Process all the available patches',
-                ], [
-                    'ident'       => 'interactive',
-                    'short-code'  => 'i',
-                    'description' => 'Process patches one by one and control if each one should be applied',
-                ], [
-                    'ident'       => 'list',
-                    'short-code'  => 'l',
-                    'description' => 'List all available patches',
-                ], [
-                    'ident'       => 'abort',
-                    'short-code'  => 'a',
-                    'description' => 'Abort the database migration',
-                ], [
-                    'ident'       => 'help',
-                    'short-code'  => 'h',
-                    'description' => 'Display this help menu',
-                ],
-            ];
+        $input    = $this->climate()
+                         ->out('There\'s <blue>'.count($patches).'</blue> patch(es) available.')
+                         ->input('<green>(patch[p], interactive[i], list[l], abort[a], help[h])?</green>');
+        $commands = [
+            [
+                'ident'       => 'patch',
+                'short-code'  => 'p',
+                'description' => 'Process all the available patches',
+            ], [
+                'ident'       => 'interactive',
+                'short-code'  => 'i',
+                'description' => 'Process patches one by one and control if each one should be applied',
+            ], [
+                'ident'       => 'list',
+                'short-code'  => 'l',
+                'description' => 'List all available patches',
+            ], [
+                'ident'       => 'abort',
+                'short-code'  => 'a',
+                'description' => 'Abort the database migration',
+            ], [
+                'ident'       => 'help',
+                'short-code'  => 'h',
+                'description' => 'Display this help menu',
+            ],
+        ];
 
-            $input->accept(array_merge(
-                array_column($commands, 'ident'),
-                array_column($commands, 'short-code')
-            ));
+        $input->accept(array_merge(
+            array_column($commands, 'ident'),
+            array_column($commands, 'short-code')
+        ));
 
-            while (true) {
-                switch ($input->prompt()) {
-                    case 'patch':
-                    case 'p':
-                        break 2;
-                    case 'interactive':
-                    case 'i':
-                        $this->setInteractive(true);
-                        break 2;
-                    case 'list':
-                    case 'l':
-                        $this->climate()->table($list);
-                        break;
-                    case 'abort':
-                    case 'a':
-                        return $response;
-                    case 'help':
-                    case 'h':
-                        $this->climate()->table($commands);
-                        break;
-                }
+        while (true) {
+            switch ($input->prompt()) {
+                case 'patch':
+                case 'p':
+                    break 2;
+                case 'interactive':
+                case 'i':
+                    $this->setInteractive(true);
+                    break 2;
+                case 'list':
+                case 'l':
+                    $this->climate()->table($list);
+                    break;
+                case 'abort':
+                case 'a':
+                    return $response;
+                case 'help':
+                case 'h':
+                    $this->climate()->table($commands);
+                    break;
             }
         }
 
