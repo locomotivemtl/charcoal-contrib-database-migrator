@@ -5,13 +5,11 @@ namespace Charcoal\DatabaseMigrator\ServiceProvider;
 // from 'charcoal-factory'
 use Charcoal\Factory\FactoryInterface;
 use Charcoal\Factory\GenericFactory as Factory;
-
 // local dependencies
-use Charcoal\DatabaseMigrator\AbstractPatch;
+use Charcoal\DatabaseMigrator\AbstractMigration;
 use Charcoal\DatabaseMigrator\MigratorConfig;
 use Charcoal\DatabaseMigrator\Service\Migrator;
-use Charcoal\DatabaseMigrator\Service\PatchFinder;
-
+use Charcoal\DatabaseMigrator\Service\MigrationFinder;
 // from 'pimple'
 use Pimple\Container;
 use Pimple\ServiceProviderInterface;
@@ -48,24 +46,20 @@ class MigratorServiceProvider implements ServiceProviderInterface
             return new Migrator($container['database']);
         };
 
-        $container['charcoal/database-migrator/patch/finder'] = function (Container $container) {
-            return new PatchFinder([
-                'config'          => $container['config'],
-                'patch/factory'   => $container['charcoal/database-migrator/patch/factory'],
-                'migrator/config' => $container['charcoal/database-migrator/config'],
-            ]);
+        $container['charcoal/database-migrator/migration/finder'] = function (Container $container) {
+            return new MigrationFinder(
+                $container['config']->get('base_path'),
+                $container['charcoal/database-migrator/migration/factory']
+            );
         };
 
         /**
          * @param Container $container A Pimple DI container.
          * @return FactoryInterface
          */
-        $container['charcoal/database-migrator/patch/factory'] = function (Container $container) {
+        $container['charcoal/database-migrator/migration/factory'] = function (Container $container) {
             return new Factory([
-                'base_class'       => AbstractPatch::class,
-                'resolver_options' => [
-                    'prefix' => '\\Charcoal\\Patch\\',
-                ],
+                'base_class'       => AbstractMigration::class,
                 'arguments'        => [
                     [
                         'container'       => $container,

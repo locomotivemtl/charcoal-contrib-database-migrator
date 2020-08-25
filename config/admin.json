@@ -2,8 +2,11 @@
     "admin": {
         "routes": {
             "scripts": {
-                "patch/database": {
-                    "ident": "charcoal/database-migrator/script/patch-database"
+                "database/migrate": {
+                    "ident": "charcoal/database-migrator/script/migrate"
+                },
+                "database/rollback": {
+                    "ident": "charcoal/database-migrator/script/rollback"
                 }
             }
         }

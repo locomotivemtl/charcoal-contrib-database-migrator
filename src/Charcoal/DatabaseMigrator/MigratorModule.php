@@ -4,7 +4,6 @@ namespace Charcoal\DatabaseMigrator;
 
 // from 'charcoal-app'
 use Charcoal\App\Module\AbstractModule;
-
 // local dependencies
 use Charcoal\DatabaseMigrator\ServiceProvider\MigratorServiceProvider;
 
@@ -13,7 +12,7 @@ use Charcoal\DatabaseMigrator\ServiceProvider\MigratorServiceProvider;
  */
 class MigratorModule extends AbstractModule
 {
-    const ADMIN_CONFIG = 'vendor/locomotivemtl/charcoal-contrib-database-migrator/config/admin.json';
+    public const ADMIN_CONFIG = 'vendor/locomotivemtl/charcoal-contrib-database-migrator/config/admin.json';
 
     /**
      * Setup the module's dependencies.

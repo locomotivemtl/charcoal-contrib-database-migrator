@@ -18,8 +18,8 @@ A [Charcoal][charcoal-app] service provider my cool feature.
 -   [Configuration](#configuration)
 -   [Usage](#usage)
     - [Running the migration](#running-the-migration)
-    - [Creating new Patches](#creating-new-patches)
-    - [Injecting Patches to the migrator](#injecting-patches-to-the-migrator)
+    - [Creating new Migrations](#creating-new-migrations)
+    - [Injecting Migrations to the migrator](#injecting-migrations-to-the-migrator)
 -   [Development](#development)
     -  [API Documentation](#api-documentation)
     -  [Development Dependencies](#development-dependencies)
@@ -65,15 +65,15 @@ In your project's config file, require the migrator module like so :
 }
 ```
 
-Optionally, you can also overide some migrator configurations in the project's config file using the ```database.migrator``` key : 
+Optionally, you can also override some migrator configurations in the project's config file using the ```database.migrator``` key : 
 ```json
 {
     "database": {
         "migrator": {
-            "patches": {
-                "paths": [
-                    "path/to/some/patches",
-                    "path/to/some/custom/patches"
+            "migrations": {
+                "search_paths": [
+                    "path/to/some/migrations",
+                    "path/to/some/custom/migrations"
                 ]
             }
         }
@@ -88,29 +88,28 @@ Optionally, you can also overide some migrator configurations in the project's c
 
 Simply run this command in the console to lunch the migration process
 ```shell
-$ vendor/bin/charcoal admin/patch/database
+$ vendor/bin/charcoal admin/database/migrate
 ```
 
 The CLI UI will guide you step by step.
 
 
-### Creating new Patches
+### Creating new Migrations
 
-A patch should always extend [**AbstractPatch**](src/Charcoal/DatabaseMigrator/AbstractPatch.php)
+A migration should always extend [**AbstractMigration**](src/Charcoal/DatabaseMigrator/AbstractMigration.php)
 
-[**GenericPatch**](src/Charcoal/Patch/DatabaseMigrator/GenericPatch.php) can be used as a starting point when creating new patches.
-Just copy and paste it the package in need of a new patch.
+[**GenericMigration**](database/migration/GenericMigration.php) can be used as a starting point when creating new migrations.
+Just copy and paste it the package in need of a new migration.
 
-A patch should always be named ``PatchYYYYMMDDHHMMSS.php`` to facilitate readability.
+A migration should always be named ``MigrationYYYYMMDDHHMMSS.php`` to facilitate readability.
 
-A patch file consist of a PHP class which follows these guidelines : 
+A migration file consist of a PHP class which follows these guidelines : 
 
-- Be namespaced ``Charcoal\\Patch\\..``
-- Have a ``DB_VERSION`` const which equals the timestamp of the commit this patch is fixing
+- Have a ``DB_VERSION`` const which equals the timestamp of the commit this migration is fixing
 - Have an ``up`` and ``down`` method for the migration tool to process the migration when going up in version or down.
-- Have a ``descripion`` and ``author`` method to briefly document the patch
+- Have a ``descripion`` and ``author`` method to briefly document the migration
 
-you can implement the setDependencies method on a patch.
+you can implement the setDependencies method on a migration.
 
 ```PHP
      /**
@@ -126,9 +125,9 @@ you can implement the setDependencies method on a patch.
     }
 ```
 
-### Injecting Patches to the migrator
+### Injecting Migrations to the migrator
 
-As long as the patch follows the guidelines described above, it'll be automatically parsed by the migrator.
+As long as the migration follows the guidelines described above, it'll be automatically parsed by the migrator.
 No need to do anything more than that.
 
 

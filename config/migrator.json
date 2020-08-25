@@ -1,7 +1,7 @@
 {
-    "patches": {
-        "paths": [
-            "src/Charcoal/Patch"
+    "migrations": {
+        "search_paths": [
+            "database/migration"
         ]
     }
 }

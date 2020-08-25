@@ -1,15 +1,13 @@
 <?php
 
-namespace Charcoal\Patch\DatabaseMigrator;
-
-use Charcoal\DatabaseMigrator\AbstractPatch;
+use Charcoal\DatabaseMigrator\AbstractMigration;
 
 /**
- * Generic Patch
+ * Generic Migration
  */
-final class GenericPatch extends AbstractPatch
+final class GenericMigration extends AbstractMigration
 {
-    const DB_VERSION = '20200101';
+    public const DB_VERSION = '20200101';
 
     /**
      * Apply migration
@@ -36,7 +34,7 @@ final class GenericPatch extends AbstractPatch
      */
     public function description(): string
     {
-        return 'This is an example patch that does nothing at all';
+        return 'This is an example migration that does nothing at all';
     }
 
     /**

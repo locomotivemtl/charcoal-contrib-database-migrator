@@ -4,31 +4,26 @@ namespace Charcoal\DatabaseMigrator;
 
 // from 'charcoal-app'
 use Charcoal\App\Config\DatabaseConfig;
-
 // from 'charcoal-config'
 use Charcoal\Config\AbstractEntity;
-
 // from 'charcoal-core'
 use Charcoal\Model\ModelInterface;
 use Charcoal\Source\DatabaseSource;
-
-use Exception;
-
 // from PDO
 use PDO;
-
 // From pimple
 use Pimple\Container;
+// PHP
+use Exception;
 
 /**
- * Abstract Patch
+ * Abstract Migration
  *
- * A patch is a file namespaced under 'Charcoal\\Patch'
- * which defines directives for a Database migration for scenarios :
+ * A migration must defines directives for a Database migration for these scenarios :
  *  - up : update to specified version;
  *  - down : revert from specified version;
  */
-abstract class AbstractPatch extends AbstractEntity
+abstract class AbstractMigration extends AbstractEntity
 {
     /**
      * @var PDO $pdo
@@ -129,7 +124,7 @@ abstract class AbstractPatch extends AbstractEntity
      * @param string $feedback Feedback messages.
      * @return $this
      */
-    protected function addFeedback($feedback)
+    protected function addFeedback(string $feedback): self
     {
         $this->feedback[] = $feedback;
 
@@ -140,7 +135,7 @@ abstract class AbstractPatch extends AbstractEntity
      * @param string $error Error messages.
      * @return $this
      */
-    protected function addError($error)
+    protected function addError(string $error): self
     {
         $this->errors[] = $error;
 
@@ -150,7 +145,7 @@ abstract class AbstractPatch extends AbstractEntity
     /**
      * @return array
      */
-    public function getFeedback()
+    public function getFeedback(): array
     {
         return $this->feedback;
     }
@@ -158,7 +153,7 @@ abstract class AbstractPatch extends AbstractEntity
     /**
      * @return array
      */
-    public function getErrors()
+    public function getErrors(): array
     {
         return $this->errors;
     }

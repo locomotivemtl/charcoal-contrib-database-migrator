@@ -6,25 +6,22 @@ namespace Charcoal\DatabaseMigrator\Script;
 use Charcoal\App\Script\AbstractScript;
 use Charcoal\App\Script\CronScriptInterface;
 use Charcoal\App\Script\CronScriptTrait;
-
 // Local dependencies
-use Charcoal\DatabaseMigrator\Exception\InvalidPatchException;
+use Charcoal\DatabaseMigrator\Exception\InvalidMigrationException;
+use Charcoal\DatabaseMigrator\MigratorConfig;
 use Charcoal\DatabaseMigrator\Service\Migrator;
-use Charcoal\DatabaseMigrator\Service\PatchFinder;
-
+use Charcoal\DatabaseMigrator\Service\MigrationFinder;
 // From pimple
 use Pimple\Container;
-
 use Exception;
-
 // From Psr-7
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
 /**
- * Patch Database Script
+ * Migrate Database Script
  */
-class PatchDatabaseScript extends AbstractScript implements CronScriptInterface
+class MigrateScript extends AbstractScript implements CronScriptInterface
 {
     use CronScriptTrait;
 
@@ -34,9 +31,14 @@ class PatchDatabaseScript extends AbstractScript implements CronScriptInterface
     protected $migrator;
 
     /**
-     * @var PatchFinder
+     * @var MigratorConfig
      */
-    protected $patchFinder;
+    protected $migratorConfig;
+
+    /**
+     * @var MigrationFinder
+     */
+    protected $migrationFinder;
 
     /**
      * @param Container $container A Pimple DI Container instance.
@@ -44,8 +46,9 @@ class PatchDatabaseScript extends AbstractScript implements CronScriptInterface
      */
     protected function setDependencies(Container $container)
     {
-        $this->migrator    = $container['charcoal/database-migrator/migrator'];
-        $this->patchFinder = $container['charcoal/database-migrator/patch/finder'];
+        $this->migrator        = $container['charcoal/database-migrator/migrator'];
+        $this->migratorConfig  = $container['charcoal/database-migrator/config'];
+        $this->migrationFinder = $container['charcoal/database-migrator/migration/finder'];
     }
 
     /**
@@ -58,22 +61,22 @@ class PatchDatabaseScript extends AbstractScript implements CronScriptInterface
         unset($request);
 
         try {
-            $patches = $this->patchFinder->search();
-        } catch (InvalidPatchException $e) {
+            $migrations = $this->migrationFinder->findMigrations($this->getMigrationPaths());
+        } catch (InvalidMigrationException $e) {
             $this->climate()->error($e->getMessage());
 
             return $response;
         }
 
-        $this->migrator->addPatches($patches);
+        $this->migrator->addMigrations($migrations);
 
         $currentVersion = $this->migrator->checkDbVersion();
-        $patches        = $this->migrator->availablePatches();
+        $migrations        = $this->migrator->availableMigrations();
 
-        // No patch to apply, exit,
-        if (empty($patches)) {
+        // No migration to apply, exit,
+        if (empty($migrations)) {
             $this->climate()->info(
-                'There\'s currently no available patch for the current Database version ('.$currentVersion.')'
+                'There\'s currently no available migration for the current Database version ('.$currentVersion.')'
             );
 
             return $response;
@@ -82,11 +85,11 @@ class PatchDatabaseScript extends AbstractScript implements CronScriptInterface
         $list      = [];
         $processed = [];
 
-        foreach ($patches as $patch) {
+        foreach ($migrations as $migration) {
             $list[] = [
-                'Version'     => '<green>'.$patch::DB_VERSION.'</green>',
-                'Description' => $patch['description'],
-                'Author'      => $patch['author'],
+                'Version'     => '<green>'.$migration::DB_VERSION.'</green>',
+                'Description' => $migration['description'],
+                'Author'      => $migration['author'],
             ];
         }
 
@@ -94,26 +97,30 @@ class PatchDatabaseScript extends AbstractScript implements CronScriptInterface
         $this->climate()->info('Migrating database from version ('.$currentVersion.')');
 
         $input    = $this->climate()
-                         ->out('There\'s <blue>'.count($patches).'</blue> patch(es) available.')
-                         ->input('<green>(patch[p], interactive[i], list[l], abort[a], help[h])?</green>');
+                         ->out('There\'s <blue>'.count($migrations).'</blue> migration(s) available.')
+                         ->input('<green>(migrate[m], interactive[i], list[l], abort[a], help[h])?</green>');
         $commands = [
             [
-                'ident'       => 'patch',
+                'ident'       => 'migrate',
                 'short-code'  => 'p',
-                'description' => 'Process all the available patches',
-            ], [
+                'description' => 'Process all the available migrations',
+            ],
+            [
                 'ident'       => 'interactive',
                 'short-code'  => 'i',
-                'description' => 'Process patches one by one and control if each one should be applied',
-            ], [
+                'description' => 'Process migrations one by one and control if each one should be applied',
+            ],
+            [
                 'ident'       => 'list',
                 'short-code'  => 'l',
-                'description' => 'List all available patches',
-            ], [
+                'description' => 'List all available migrations',
+            ],
+            [
                 'ident'       => 'abort',
                 'short-code'  => 'a',
                 'description' => 'Abort the database migration',
-            ], [
+            ],
+            [
                 'ident'       => 'help',
                 'short-code'  => 'h',
                 'description' => 'Display this help menu',
@@ -127,8 +134,8 @@ class PatchDatabaseScript extends AbstractScript implements CronScriptInterface
 
         while (true) {
             switch ($input->prompt()) {
-                case 'patch':
-                case 'p':
+                case 'migration':
+                case 'm':
                     break 2;
                 case 'interactive':
                 case 'i':
@@ -152,30 +159,33 @@ class PatchDatabaseScript extends AbstractScript implements CronScriptInterface
             [
                 'ident'       => 'yes',
                 'short-code'  => 'y',
-                'description' => 'Process the patch',
-            ], [
+                'description' => 'Process the migration',
+            ],
+            [
                 'ident'       => 'skip',
                 'short-code'  => 's',
-                'description' => 'Skip this patch and proceed with the rest',
-            ], [
+                'description' => 'Skip this migration and proceed with the rest',
+            ],
+            [
                 'ident'       => 'abort',
                 'short-code'  => 'a',
                 'description' => 'Abort the rest of the database migration',
-            ], [
+            ],
+            [
                 'ident'       => 'help',
                 'short-code'  => 'h',
                 'description' => 'Display this help menu',
             ],
         ];
 
-        $progress = $this->climate()->progress(count($patches) + 1);
+        $progress = $this->climate()->progress(count($migrations) + 1);
 
-        foreach ($patches as $patch) {
+        foreach ($migrations as $migration) {
             $progress->advance(1, sprintf(
-                'Processing patch : <blue>%s | %s | %s</blue>',
-                $patch::DB_VERSION,
-                $patch['description'],
-                $patch['author']
+                'Processing migration : <blue>%s | %s | %s</blue>',
+                $migration::DB_VERSION,
+                $migration['description'],
+                $migration['author']
             ));
             if ($this->interactive()) {
                 $input = $this->climate()->blue()->input(
@@ -198,9 +208,9 @@ class PatchDatabaseScript extends AbstractScript implements CronScriptInterface
                             // Skip one loop
                             $processed[] = [
                                 'status'      => '<yellow>SKIPPED</yellow>',
-                                'Version'     => $patch::DB_VERSION,
-                                'Description' => $patch['description'],
-                                'Author'      => $patch['author'],
+                                'Version'     => $migration::DB_VERSION,
+                                'Description' => $migration['description'],
+                                'Author'      => $migration['author'],
                             ];
                             continue 3;
                         case 'abort':
@@ -215,24 +225,30 @@ class PatchDatabaseScript extends AbstractScript implements CronScriptInterface
                 }
             }
 
-            $this->migrator->up([$patch::DB_VERSION]);
-            $feedbacks = $this->migrator->feedback($patch::DB_VERSION);
+            try {
+                $this->migrator->up([$migration::DB_VERSION]);
+            } catch (Exception $exception) {
+                // Do something
+
+            }
+
+            $feedbacks = $this->migrator->feedback($migration::DB_VERSION);
             array_map([$this->climate(), 'info'], $feedbacks);
 
-            $errors = $this->migrator->errors($patch::DB_VERSION);
+            $errors = $this->migrator->errors($migration::DB_VERSION);
             if (!empty($errors)) {
                 // Prompt to continue or stop there
                 array_map([$this->climate(), 'error'], $errors);
 
                 $continue = $this->climate()
-                                 ->error('An error occurred while processing the patch : '.$patch::DB_VERSION)
-                                 ->confirm('Would you like to process the rest of the patches?');
+                                 ->error('An error occurred while processing the migrtation : '.$migration::DB_VERSION)
+                                 ->confirm('Would you like to process the rest of the migrations?');
 
                 $processed[] = [
                     'status'      => '<red>ERROR</red>',
-                    'Version'     => $patch::DB_VERSION,
-                    'Description' => $patch['description'],
-                    'Author'      => $patch['author'],
+                    'Version'     => $migration::DB_VERSION,
+                    'Description' => $migration['description'],
+                    'Author'      => $migration['author'],
                 ];
                 if (!$continue->confirmed()) {
                     break;
@@ -243,9 +259,9 @@ class PatchDatabaseScript extends AbstractScript implements CronScriptInterface
 
             $processed[] = [
                 'status'      => '<green>PROCESSED</green>',
-                'Version'     => $patch::DB_VERSION,
-                'Description' => $patch['description'],
-                'Author'      => $patch['author'],
+                'Version'     => $migration::DB_VERSION,
+                'Description' => $migration['description'],
+                'Author'      => $migration['author'],
             ];
         }
 
@@ -256,5 +272,15 @@ class PatchDatabaseScript extends AbstractScript implements CronScriptInterface
         }
 
         return $response;
+    }
+
+    /**
+     * Retrieve all of the migration paths.
+     *
+     * @return string[]
+     */
+    protected function getMigrationPaths(): array
+    {
+        return $this->migratorConfig->get('migrations.search_paths');
     }
 }

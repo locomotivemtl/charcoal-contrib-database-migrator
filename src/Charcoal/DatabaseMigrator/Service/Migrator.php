@@ -12,10 +12,10 @@ use PDO;
  */
 class Migrator
 {
-    const DB_VERSION_TABLE_NAME = '_db_versions';
-    const DB_VERSION_COLUMN_NAME = 'version';
-    const UP_ACTION = 'up';
-    const DOWN_ACTION = 'down';
+    private const DB_VERSION_TABLE_NAME = '_db_versions';
+    private const DB_VERSION_COLUMN_NAME = 'version';
+    private const UP_ACTION = 'up';
+    private const DOWN_ACTION = 'down';
 
     /**
      * @var PDO
@@ -25,12 +25,12 @@ class Migrator
     /**
      * @var array
      */
-    protected $patches = [];
+    protected $migrations = [];
 
     /**
      * @var array
      */
-    protected $availablePatches = [];
+    protected $availableMigrations = [];
 
     /**
      * List of feedbacks
@@ -53,28 +53,28 @@ class Migrator
     /**
      * Migrator constructor.
      *
-     * @param PDO   $pdo     Database connector.
-     * @param array $patches All the patches found.
+     * @param PDO   $pdo        Database connector.
+     * @param array $migrations All the patches found.
      */
-    public function __construct(PDO $pdo, array $patches = [])
+    public function __construct(PDO $pdo, array $migrations = [])
     {
         $this->setPdo($pdo);
-        $this->setPatches($patches);
+        $this->setMigrations($migrations);
     }
 
     /**
-     * Apply patches  by passing the patches versions as an array
+     * Apply migrations by passing the migration versions as an array
      * ex: [ '20191203160900', '20190309150000' ]
      *
-     * @param array $patches A predefined list of patches to process (optional).
+     * @param array $versions A predefined list of migrations to process (optional).
      * @return void
      */
-    public function up(array $patches = [])
+    public function up(array $versions = []): void
     {
-        $availablePatches = $this->availablePatches();
+        $availablePatches = $this->availableMigrations();
 
         foreach ($availablePatches as $patch) {
-            if (in_array($patch::DB_VERSION, $patches) || empty($patches)) {
+            if (in_array($patch::DB_VERSION, $versions) || empty($versions)) {
                 $patch->up();
                 $this->addFeedback($patch::DB_VERSION, $patch->getFeedback());
                 $this->addErrors($patch::DB_VERSION, $patch->getErrors());
@@ -84,46 +84,46 @@ class Migrator
     }
 
     /**
-     * Revert patches by passing the patches versions as an array
+     * Revert migrations by passing the migration versions as an array
      * ex: [ '20191203160900', '20190309150000' ]
      *
-     * @param array $patches A predefined list of patches to process (optional).
+     * @param array $versions A predefined list of migrations to process (optional).
      * @return void
      */
-    public function down(array $patches = [])
+    public function down(array $versions = []): void
     {
-        $availablePatches = $this->availablePatches();
+        $availablePatches = $this->availableMigrations();
 
         foreach ($availablePatches as $patch) {
-            if (in_array($patch::DB_VERSION, $patches) || empty($patches)) {
+            if (in_array($patch::DB_VERSION, $versions) || empty($versions)) {
                 $patch->down();
                 $this->addFeedback($patch::DB_VERSION, $patch->getFeedback());
                 $this->addErrors($patch::DB_VERSION, $patch->getErrors());
-                $this->updateDbVersionLog($patch::DB_VERSION);
+                $this->updateDbVersionLog($patch::DB_VERSION, self::DOWN_ACTION);
             }
         }
     }
 
     /**
-     * @return array|mixed
+     * @return array
      */
-    public function availablePatches()
+    public function availableMigrations(): array
     {
-        if ($this->availablePatches) {
-            return $this->availablePatches;
+        if ($this->availableMigrations) {
+            return $this->availableMigrations;
         }
 
         $dbV = $this->checkDbVersion();
 
         if ($dbV === 0) {
-            return $this->patches();
+            return $this->migrations();
         }
 
-        $this->availablePatches = array_filter($this->patches(), function ($patch) use ($dbV) {
-            return $dbV < $patch::DB_VERSION;
+        $this->availableMigrations = array_filter($this->migrations(), function ($migration) use ($dbV) {
+            return $dbV < $migration::DB_VERSION;
         });
 
-        return $this->availablePatches;
+        return $this->availableMigrations;
     }
 
     /**
@@ -161,7 +161,7 @@ class Migrator
     /**
      * @return string
      */
-    protected function tableSkeleton()
+    protected function tableSkeleton(): string
     {
         return strtr(
             '
@@ -181,11 +181,11 @@ class Migrator
     }
 
     /**
-     * @param string $v      The database version.
-     * @param string $action The action.
+     * @param string $version The database version.
+     * @param string $action  The action.
      * @return void
      */
-    protected function updateDbVersionLog($v, $action = self::UP_ACTION): void
+    protected function updateDbVersionLog(string $version, string $action = self::UP_ACTION): void
     {
         $q = strtr(
             'INSERT INTO %table (`%column`, ts, action) VALUES (:version, NOW(), :action)',
@@ -196,15 +196,15 @@ class Migrator
         );
 
         $sth = $this->pdo()->prepare($q);
-        $sth->bindParam(':version', $v, PDO::PARAM_STR);
+        $sth->bindParam(':version', $version, PDO::PARAM_STR);
         $sth->bindParam(':action', $action, PDO::PARAM_STR);
         $sth->execute();
     }
 
     /**
-     * @return mixed
+     * @return PDO
      */
-    public function pdo()
+    public function pdo(): PDO
     {
         return $this->pdo;
     }
@@ -213,7 +213,7 @@ class Migrator
      * @param PDO $pdo PDO connector.
      * @return Migrator
      */
-    public function setPdo(PDO $pdo)
+    public function setPdo(PDO $pdo): self
     {
         $this->pdo = $pdo;
 
@@ -221,51 +221,51 @@ class Migrator
     }
 
     /**
-     * @return mixed
+     * @return array
      */
-    protected function patches()
+    protected function migrations(): array
     {
-        return $this->patches;
+        return $this->migrations;
     }
 
     /**
-     * @param mixed $patches List of all patches.
+     * @param mixed $migrations List of all migrations.
      * @return Migrator
      */
-    protected function setPatches($patches)
+    protected function setMigrations($migrations): self
     {
         // Order from oldest to newest
-        usort($patches, function ($item1, $item2) {
+        usort($migrations, function ($item1, $item2) {
             return ($item1::DB_VERSION <=> $item2::DB_VERSION);
         });
-        $this->patches = $patches;
+        $this->migrations = $migrations;
 
         return $this;
     }
 
     /**
-     * @param array $patches Patches to add.
+     * @param array $migrations Migrations to add.
      * @return $this
      */
-    public function addPatches(array $patches)
+    public function addMigrations(array $migrations): self
     {
-        return $this->setPatches(array_merge($this->patches, $patches));
+        return $this->setMigrations(array_merge($this->migrations, $migrations));
     }
 
     /**
-     * @param string|null $patch The patch ident.
+     * @param string|null $version The migration ident.
      * @return array
      */
-    public function feedback($patch = null): array
+    public function feedback(string $version = null): array
     {
-        return ($this->feedback[$patch] ?? $this->feedback);
+        return ($this->feedback[$version] ?? $this->feedback);
     }
 
     /**
      * @param array $feedback List of feedbacks.
      * @return Migrator
      */
-    protected function setFeedback(array $feedback)
+    protected function setFeedback(array $feedback): self
     {
         $this->feedback = $feedback;
 
@@ -273,34 +273,34 @@ class Migrator
     }
 
     /**
-     * @param string $v        Database version.
+     * @param string $version  Database version.
      * @param array  $feedback List of feedbacks.
      * @return $this
      */
-    protected function addFeedback($v, array $feedback = [])
+    protected function addFeedback(string $version, array $feedback = []): self
     {
-        if (!isset($this->feedback[$v])) {
-            $this->feedback[$v] = [];
+        if (!isset($this->feedback[$version])) {
+            $this->feedback[$version] = [];
         }
-        $this->feedback[$v] = array_merge($this->feedback[$v], $feedback);
+        $this->feedback[$version] = array_merge($this->feedback[$version], $feedback);
 
         return $this;
     }
 
     /**
-     * @param string|null $patch The patch ident.
+     * @param string|null $version The migration ident.
      * @return array
      */
-    public function errors($patch = null): array
+    public function errors(string $version = null): array
     {
-        return ($this->errors[$patch] ?? $this->errors);
+        return ($this->errors[$version] ?? $this->errors);
     }
 
     /**
      * @param array $errors List of errors.
      * @return Migrator
      */
-    protected function setErrors(array $errors)
+    protected function setErrors(array $errors): self
     {
         $this->errors = $errors;
 
@@ -308,16 +308,16 @@ class Migrator
     }
 
     /**
-     * @param string $v      Database version.
-     * @param array  $errors List of errors.
+     * @param string $version Database version.
+     * @param array  $errors  List of errors.
      * @return $this
      */
-    protected function addErrors($v, array $errors = [])
+    protected function addErrors(string $version, array $errors = []): self
     {
-        if (!isset($this->errors[$v])) {
-            $this->errors[$v] = [];
+        if (!isset($this->errors[$version])) {
+            $this->errors[$version] = [];
         }
-        $this->errors[$v] = array_merge($this->errors[$v], $errors);
+        $this->errors[$version] = array_merge($this->errors[$version], $errors);
 
         return $this;
     }
