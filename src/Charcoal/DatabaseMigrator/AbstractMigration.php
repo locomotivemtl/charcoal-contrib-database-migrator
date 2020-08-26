@@ -68,7 +68,7 @@ abstract class AbstractMigration extends AbstractEntity
     public function version(): string
     {
         if (!isset($this->version)) {
-            $this->version = str_replace('Migration', '', self::class);
+            $this->version = preg_replace('/.*Migration/', '', static::class);
         }
 
         return $this->version;
