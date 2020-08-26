@@ -30,7 +30,11 @@
     },
     "require": {
         "php": ">7.1",
-        "ext-pdo": "*"
+        "ext-pdo": "*",
+        "locomotivemtl/charcoal-config": "*",
+        "locomotivemtl/charcoal-factory": "*",
+        "locomotivemtl/charcoal-core": "*",
+        "locomotivemtl/charcoal-app": "*"
     },
     "require-dev": {
         "phpunit/phpunit": "^7.1",
