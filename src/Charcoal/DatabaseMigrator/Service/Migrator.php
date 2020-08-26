@@ -15,6 +15,7 @@ class Migrator
 {
     private const DB_VERSION_TABLE_NAME = '_db_versions';
     private const DB_VERSION_COLUMN_NAME = 'version';
+    private const SKIP_ACTION = 'skip';
     private const UP_ACTION = 'up';
     private const DOWN_ACTION = 'down';
 
@@ -79,7 +80,7 @@ class Migrator
                 $migration->up();
                 $this->addFeedback($migration->version(), $migration->getFeedbacks());
                 $this->addErrors($migration->version(), $migration->getErrors());
-                $this->updateDbVersionLog($migration->version());
+                $this->updateDbVersionLog($migration->version(), self::UP_ACTION);
             }
         }
     }
@@ -186,7 +187,7 @@ class Migrator
      * @param string $action  The action.
      * @return void
      */
-    protected function updateDbVersionLog(string $version, string $action = self::UP_ACTION): void
+    public function updateDbVersionLog(string $version, string $action): void
     {
         $q = strtr(
             'INSERT INTO %table (`%column`, ts, action) VALUES (:version, NOW(), :action)',
