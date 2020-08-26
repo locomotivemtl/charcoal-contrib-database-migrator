@@ -21,19 +21,19 @@ class MigrationFinder
     /**
      * @var FactoryInterface
      */
-    protected $patchFactory;
+    protected $migrationFactory;
 
     /**
      * MigrationFinder constructor.
      *
-     * @param string           $basePath     Application base path.
-     * @param FactoryInterface $patchFactory Migration factory.
+     * @param string           $basePath         Application base path.
+     * @param FactoryInterface $migrationFactory Migration factory.
      * @return void
      */
-    public function __construct(string $basePath, FactoryInterface $patchFactory)
+    public function __construct(string $basePath, FactoryInterface $migrationFactory)
     {
-        $this->basePath     = $basePath;
-        $this->patchFactory = $patchFactory;
+        $this->basePath         = $basePath;
+        $this->migrationFactory = $migrationFactory;
     }
 
     /**
@@ -54,11 +54,14 @@ class MigrationFinder
         return array_map(function ($path) use ($pattern) {
             require_once $path;
 
+            $path  = str_replace($this->getBasePath(), '', $path);
             $file  = preg_replace($pattern, '', $path);
             $class = str_replace(['/', '.php'], ['\\', ''], $file);
 
             try {
-                return $this->patchFactory->create($class);
+                $migration = $this->migrationFactory->create($class);
+
+                return $migration->setPath($path);
             } catch (Exception $e) {
                 throw new InvalidMigrationException($e->getMessage());
             }

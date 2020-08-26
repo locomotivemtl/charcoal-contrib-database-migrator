@@ -4,6 +4,7 @@ namespace Charcoal\DatabaseMigrator\Service;
 
 use Charcoal\DatabaseMigrator\AbstractMigration;
 use PDO;
+use PDOException;
 
 /**
  * Migrator Service
@@ -80,7 +81,7 @@ class Migrator
                 $migration->up();
                 $this->addFeedback($migration->version(), $migration->getFeedbacks());
                 $this->addErrors($migration->version(), $migration->getErrors());
-                $this->updateDbVersionLog($migration->version(), self::UP_ACTION);
+                $this->updateDbVersionLog($migration, self::UP_ACTION);
             }
         }
     }
@@ -101,7 +102,7 @@ class Migrator
                 $migration->down();
                 $this->addFeedback($migration->version(), $migration->getFeedbacks());
                 $this->addErrors($migration->version(), $migration->getErrors());
-                $this->updateDbVersionLog($migration->version(), self::DOWN_ACTION);
+                $this->updateDbVersionLog($migration, self::DOWN_ACTION);
             }
         }
     }
@@ -168,10 +169,11 @@ class Migrator
         return strtr(
             '
             CREATE TABLE `%table` (
-                id INT NOT NULL,
-                %column VARCHAR(10),
+                id INT NOT NULL AUTO_INCREMENT,
+                %column VARCHAR(14),
                 ts DATETIME,
                 action VARCHAR(255),
+                path VARCHAR(255),
                 PRIMARY KEY (id)
             );
             ',
@@ -183,24 +185,32 @@ class Migrator
     }
 
     /**
-     * @param string $version The database version.
-     * @param string $action  The action.
+     * @param AbstractMigration $migration The migration.
+     * @param string            $action    The action.
      * @return void
      */
-    public function updateDbVersionLog(string $version, string $action): void
+    public function updateDbVersionLog(AbstractMigration $migration, string $action): void
     {
         $q = strtr(
-            'INSERT INTO %table (`%column`, ts, action) VALUES (:version, NOW(), :action)',
+            'INSERT INTO `%table` (`%column`, ts, action, path) VALUES (:version, NOW(), :action, :path)',
             [
                 '%table'  => self::DB_VERSION_TABLE_NAME,
                 '%column' => self::DB_VERSION_COLUMN_NAME,
             ]
         );
 
+        $version = $migration->version();
+        $path    = $migration->getPath();
+
         $sth = $this->getPdo()->prepare($q);
         $sth->bindParam(':version', $version, PDO::PARAM_STR);
         $sth->bindParam(':action', $action, PDO::PARAM_STR);
-        $sth->execute();
+        $sth->bindParam(':path', $path, PDO::PARAM_STR);
+        try {
+            $sth->execute();
+        } catch (PDOException $e) {
+            $this->addErrors($version, [$e->getMessage()]);
+        }
     }
 
     /**
@@ -314,7 +324,7 @@ class Migrator
      * @param array  $errors  List of errors.
      * @return $this
      */
-    protected function addErrors(string $version, array $errors = []): self
+    protected function addErrors(string $version, array $errors): self
     {
         if (!isset($this->errors[$version])) {
             $this->errors[$version] = [];

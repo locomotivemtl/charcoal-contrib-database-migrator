@@ -88,6 +88,7 @@ class MigrateScript extends AbstractScript implements CronScriptInterface
         foreach ($migrations as $migration) {
             $list[] = [
                 'Version'     => '<green>'.$migration->version().'</green>',
+                'Path'        => $migration->getPath(),
                 'Description' => $migration->description(),
             ];
         }
@@ -101,7 +102,7 @@ class MigrateScript extends AbstractScript implements CronScriptInterface
         $commands = [
             [
                 'ident'       => 'migrate',
-                'short-code'  => 'p',
+                'short-code'  => 'm',
                 'description' => 'Process all the available migrations',
             ],
             [
@@ -181,8 +182,9 @@ class MigrateScript extends AbstractScript implements CronScriptInterface
 
         foreach ($migrations as $migration) {
             $progress->advance(1, sprintf(
-                'Processing migration : <blue>%s | %s</blue>',
+                'Processing migration : <blue>%s | %s | %s</blue>',
                 $migration->version(),
+                $migration->getPath(),
                 $migration->description()
             ));
             if ($this->interactive()) {
@@ -207,6 +209,7 @@ class MigrateScript extends AbstractScript implements CronScriptInterface
                             $processed[] = [
                                 'status'      => '<yellow>SKIPPED</yellow>',
                                 'Version'     => $migration->version(),
+                                'Path'        => $migration->getPath(),
                                 'Description' => $migration->description(),
                             ];
                             continue 3;
@@ -226,7 +229,6 @@ class MigrateScript extends AbstractScript implements CronScriptInterface
                 $this->migrator->up([$migration->version()]);
             } catch (Exception $exception) {
                 // Do something
-
             }
 
             $feedbacks = $this->migrator->getFeedback($migration->version());
@@ -244,6 +246,7 @@ class MigrateScript extends AbstractScript implements CronScriptInterface
                 $processed[] = [
                     'status'      => '<red>ERROR</red>',
                     'Version'     => $migration->version(),
+                    'Path'        => $migration->getPath(),
                     'Description' => $migration->description(),
                 ];
                 if (!$continue->confirmed()) {
@@ -256,6 +259,7 @@ class MigrateScript extends AbstractScript implements CronScriptInterface
             $processed[] = [
                 'status'      => '<green>PROCESSED</green>',
                 'Version'     => $migration->version(),
+                'Path'        => $migration->getPath(),
                 'Description' => $migration->description(),
             ];
         }

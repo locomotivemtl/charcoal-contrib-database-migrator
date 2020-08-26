@@ -46,6 +46,11 @@ abstract class AbstractMigration
     protected $databaseConfig;
 
     /**
+     * @var string
+     */
+    protected $path;
+
+    /**
      * AbstractPatch constructor.
      *
      * @param array $data Dependencies.
@@ -71,7 +76,7 @@ abstract class AbstractMigration
     protected function init(): void
     {
         // This method is a stub.
-        // Reimplement in children class to process data that is needed in both 'up' and 'down' mithods.
+        // Reimplement in children class to process data that is needed in both 'up' and 'down' methods.
     }
 
     /**
@@ -176,6 +181,25 @@ abstract class AbstractMigration
     public function getErrors(): array
     {
         return $this->errors;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPath(): string
+    {
+        return $this->path;
+    }
+
+    /**
+     * @param string $path Path for AbstractMigration.
+     * @return self
+     */
+    public function setPath(string $path): self
+    {
+        $this->path = $path;
+
+        return $this;
     }
 
     /**
