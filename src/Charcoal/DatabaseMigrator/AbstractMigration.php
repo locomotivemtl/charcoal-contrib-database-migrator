@@ -58,6 +58,16 @@ abstract class AbstractMigration
         if (isset($data['container'])) {
             $this->setDependencies($data['container']);
         }
+
+        $this->init();
+    }
+
+    /**
+     * This method is stub.
+     * @return void
+     */
+    protected function init(): void
+    {
     }
 
     /**
