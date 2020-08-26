@@ -23,7 +23,7 @@ use Exception;
  *  - up : update to specified version;
  *  - down : revert from specified version;
  */
-abstract class AbstractMigration extends AbstractEntity
+abstract class AbstractMigration
 {
     /**
      * @var PDO $pdo
@@ -198,12 +198,4 @@ abstract class AbstractMigration extends AbstractEntity
      * @return string
      */
     abstract public function description(): string;
-
-
-    /**
-     * The author of the patch.
-     *
-     * @return string
-     */
-    abstract public function author(): string;
 }

@@ -88,8 +88,7 @@ class MigrateScript extends AbstractScript implements CronScriptInterface
         foreach ($migrations as $migration) {
             $list[] = [
                 'Version'     => '<green>'.$migration->version().'</green>',
-                'Description' => $migration['description'],
-                'Author'      => $migration['author'],
+                'Description' => $migration->description(),
             ];
         }
 
@@ -184,8 +183,7 @@ class MigrateScript extends AbstractScript implements CronScriptInterface
             $progress->advance(1, sprintf(
                 'Processing migration : <blue>%s | %s | %s</blue>',
                 $migration->version(),
-                $migration['description'],
-                $migration['author']
+                $migration->description()
             ));
             if ($this->interactive()) {
                 $input = $this->climate()->blue()->input(
@@ -209,8 +207,7 @@ class MigrateScript extends AbstractScript implements CronScriptInterface
                             $processed[] = [
                                 'status'      => '<yellow>SKIPPED</yellow>',
                                 'Version'     => $migration->version(),
-                                'Description' => $migration['description'],
-                                'Author'      => $migration['author'],
+                                'Description' => $migration->description(),
                             ];
                             continue 3;
                         case 'abort':
@@ -247,8 +244,7 @@ class MigrateScript extends AbstractScript implements CronScriptInterface
                 $processed[] = [
                     'status'      => '<red>ERROR</red>',
                     'Version'     => $migration->version(),
-                    'Description' => $migration['description'],
-                    'Author'      => $migration['author'],
+                    'Description' => $migration->description(),
                 ];
                 if (!$continue->confirmed()) {
                     break;
@@ -260,8 +256,7 @@ class MigrateScript extends AbstractScript implements CronScriptInterface
             $processed[] = [
                 'status'      => '<green>PROCESSED</green>',
                 'Version'     => $migration->version(),
-                'Description' => $migration['description'],
-                'Author'      => $migration['author'],
+                'Description' => $migration->description(),
             ];
         }
 
