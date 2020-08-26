@@ -259,7 +259,7 @@ class MigrateScript extends AbstractScript implements CronScriptInterface
             }
 
             $processed[] = [
-                'status'      => '<green>'.$migration->getStatus().'</green>',
+                'status'      => '<green>'.($migration->getStatus() ?? $migration::PROCESSED_STATUS).'</green>',
                 'Version'     => $migration->version(),
                 'Path'        => $migration->getPath(),
                 'Description' => $migration->description(),
