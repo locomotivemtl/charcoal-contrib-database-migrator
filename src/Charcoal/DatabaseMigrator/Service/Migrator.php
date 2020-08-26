@@ -16,9 +16,8 @@ class Migrator
 {
     private const DB_VERSION_TABLE_NAME = '_db_versions';
     private const DB_VERSION_COLUMN_NAME = 'version';
-    private const SKIP_ACTION = 'skip';
-    private const UP_ACTION = 'up';
-    private const DOWN_ACTION = 'down';
+    private const UP_DIRECTION = 'up';
+    private const DOWN_DIRECTION = 'down';
 
     /**
      * @var PDO
@@ -81,7 +80,7 @@ class Migrator
                 $migration->up();
                 $this->addFeedback($migration->version(), $migration->getFeedbacks());
                 $this->addErrors($migration->version(), $migration->getErrors());
-                $this->updateDbVersionLog($migration, self::UP_ACTION);
+                $this->updateDbVersionLog($migration, self::UP_DIRECTION);
             }
         }
     }
@@ -102,7 +101,7 @@ class Migrator
                 $migration->down();
                 $this->addFeedback($migration->version(), $migration->getFeedbacks());
                 $this->addErrors($migration->version(), $migration->getErrors());
-                $this->updateDbVersionLog($migration, self::DOWN_ACTION);
+                $this->updateDbVersionLog($migration, self::DOWN_DIRECTION);
             }
         }
     }
@@ -172,8 +171,9 @@ class Migrator
                 id INT NOT NULL AUTO_INCREMENT,
                 %column VARCHAR(14),
                 ts DATETIME,
-                action VARCHAR(255),
+                direction VARCHAR(255),
                 path VARCHAR(255),
+                status VARCHAR(255),
                 PRIMARY KEY (id)
             );
             ',
@@ -186,13 +186,14 @@ class Migrator
 
     /**
      * @param AbstractMigration $migration The migration.
-     * @param string            $action    The action.
+     * @param string            $direction The action.
      * @return void
      */
-    public function updateDbVersionLog(AbstractMigration $migration, string $action): void
+    public function updateDbVersionLog(AbstractMigration $migration, string $direction): void
     {
         $q = strtr(
-            'INSERT INTO `%table` (`%column`, ts, action, path) VALUES (:version, NOW(), :action, :path)',
+            'INSERT INTO `%table` (`%column`, ts, direction, path, status) '.
+            'VALUES (:version, NOW(), :direction, :path, :status)',
             [
                 '%table'  => self::DB_VERSION_TABLE_NAME,
                 '%column' => self::DB_VERSION_COLUMN_NAME,
@@ -201,11 +202,13 @@ class Migrator
 
         $version = $migration->version();
         $path    = $migration->getPath();
+        $status  = ($migration->getStatus() ?? $migration::PROCESSED_STATUS);
 
         $sth = $this->getPdo()->prepare($q);
         $sth->bindParam(':version', $version, PDO::PARAM_STR);
-        $sth->bindParam(':action', $action, PDO::PARAM_STR);
+        $sth->bindParam(':direction', $direction, PDO::PARAM_STR);
         $sth->bindParam(':path', $path, PDO::PARAM_STR);
+        $sth->bindParam(':status', $status, PDO::PARAM_STR);
         try {
             $sth->execute();
         } catch (PDOException $e) {

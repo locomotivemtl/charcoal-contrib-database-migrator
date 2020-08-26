@@ -25,6 +25,11 @@ use Exception;
  */
 abstract class AbstractMigration
 {
+    public const PROCESSED_STATUS = 'processed';
+    public const SKIPPED_STATUS = 'skipped';
+    public const FAILED_STATUS = 'failed';
+    public const NOT_NEEDED_STATUS = 'not needed';
+
     /**
      * @var PDO $pdo
      */
@@ -49,6 +54,11 @@ abstract class AbstractMigration
      * @var string
      */
     protected $path;
+
+    /**
+     * @var string
+     */
+    protected $status;
 
     /**
      * AbstractPatch constructor.
@@ -198,6 +208,25 @@ abstract class AbstractMigration
     public function setPath(string $path): self
     {
         $this->path = $path;
+
+        return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getStatus(): ?string
+    {
+        return $this->status;
+    }
+
+    /**
+     * @param string $status Status for AbstractMigration.
+     * @return self
+     */
+    public function setStatus(string $status): self
+    {
+        $this->status = $status;
 
         return $this;
     }

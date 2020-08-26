@@ -205,9 +205,11 @@ class MigrateScript extends AbstractScript implements CronScriptInterface
                             break 2;
                         case 'skip':
                         case 's':
+                            $migration->setStatus($migration::SKIPPED_STATUS);
+                            $this->migrator->updateDbVersionLog($migration, 'up');
                             // Skip one loop
                             $processed[] = [
-                                'status'      => '<yellow>SKIPPED</yellow>',
+                                'status'      => '<yellow>'.$migration->getStatus().'</yellow>',
                                 'Version'     => $migration->version(),
                                 'Path'        => $migration->getPath(),
                                 'Description' => $migration->description(),
@@ -244,7 +246,7 @@ class MigrateScript extends AbstractScript implements CronScriptInterface
                                  ->confirm('Would you like to process the rest of the migrations?');
 
                 $processed[] = [
-                    'status'      => '<red>ERROR</red>',
+                    'status'      => '<red>'.$migration->getStatus().'</red>',
                     'Version'     => $migration->version(),
                     'Path'        => $migration->getPath(),
                     'Description' => $migration->description(),
@@ -257,7 +259,7 @@ class MigrateScript extends AbstractScript implements CronScriptInterface
             }
 
             $processed[] = [
-                'status'      => '<green>PROCESSED</green>',
+                'status'      => '<green>'.$migration->getStatus().'</green>',
                 'Version'     => $migration->version(),
                 'Path'        => $migration->getPath(),
                 'Description' => $migration->description(),
