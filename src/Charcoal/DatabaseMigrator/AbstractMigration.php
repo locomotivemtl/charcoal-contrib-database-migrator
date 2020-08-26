@@ -4,6 +4,8 @@ namespace Charcoal\DatabaseMigrator;
 
 // from 'charcoal-app'
 use Charcoal\App\Config\DatabaseConfig;
+// Local dependencies
+use Charcoal\DatabaseMigrator\Exception\IrreversibleMigrationException;
 // from 'charcoal-core'
 use Charcoal\Model\ModelInterface;
 use Charcoal\Source\DatabaseSource;
@@ -68,6 +70,8 @@ abstract class AbstractMigration
      */
     protected function init(): void
     {
+        // This method is a stub.
+        // Reimplement in children class to process data that is needed in both 'up' and 'down' mithods.
     }
 
     /**
@@ -183,7 +187,7 @@ abstract class AbstractMigration
     protected function setDependencies(Container $container): void
     {
         // This method is a stub.
-        // Reimplement in children method to inject dependencies in your class from a Pimple container.
+        // Reimplement in children class to inject dependencies from a Pimple container.
     }
 
     /**
@@ -197,8 +201,12 @@ abstract class AbstractMigration
      * Revert migration
      *
      * @return void
+     * @throws IrreversibleMigrationException When a migration revert cannot be done.
      */
-    abstract public function down(): void;
+    public function down(): void
+    {
+        throw new IrreversibleMigrationException('Migration [%s] cannot be reverted');
+    }
 
     /**
      * Short description of what the patch will do.
