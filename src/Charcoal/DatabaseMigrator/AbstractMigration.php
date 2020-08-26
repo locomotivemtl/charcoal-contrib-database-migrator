@@ -53,10 +53,6 @@ abstract class AbstractMigration extends AbstractEntity
      */
     public function __construct(array $data)
     {
-        if (!defined('static::DB_VERSION')) {
-            throw new Exception(sprintf('The patch [%s] is missing the "DB_VERSION" const', static::class));
-        }
-
         $this->setPdo($data['database']);
         $this->setDatabaseConfig($data['database/config']);
 
@@ -64,6 +60,18 @@ abstract class AbstractMigration extends AbstractEntity
         if (isset($data['container'])) {
             $this->setDependencies($data['container']);
         }
+    }
+
+    /**
+     * @return string
+     */
+    public function version(): string
+    {
+        if (!isset($this->version)) {
+            $this->version = str_replace('Migration', '', self::class);
+        }
+
+        return $this->version;
     }
 
     /**

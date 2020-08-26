@@ -71,7 +71,7 @@ class MigrateScript extends AbstractScript implements CronScriptInterface
         $this->migrator->addMigrations($migrations);
 
         $currentVersion = $this->migrator->checkDbVersion();
-        $migrations        = $this->migrator->availableMigrations();
+        $migrations     = $this->migrator->availableMigrations();
 
         // No migration to apply, exit,
         if (empty($migrations)) {
@@ -87,7 +87,7 @@ class MigrateScript extends AbstractScript implements CronScriptInterface
 
         foreach ($migrations as $migration) {
             $list[] = [
-                'Version'     => '<green>'.$migration::DB_VERSION.'</green>',
+                'Version'     => '<green>'.$migration->version().'</green>',
                 'Description' => $migration['description'],
                 'Author'      => $migration['author'],
             ];
@@ -183,7 +183,7 @@ class MigrateScript extends AbstractScript implements CronScriptInterface
         foreach ($migrations as $migration) {
             $progress->advance(1, sprintf(
                 'Processing migration : <blue>%s | %s | %s</blue>',
-                $migration::DB_VERSION,
+                $migration->version(),
                 $migration['description'],
                 $migration['author']
             ));
@@ -208,7 +208,7 @@ class MigrateScript extends AbstractScript implements CronScriptInterface
                             // Skip one loop
                             $processed[] = [
                                 'status'      => '<yellow>SKIPPED</yellow>',
-                                'Version'     => $migration::DB_VERSION,
+                                'Version'     => $migration->version(),
                                 'Description' => $migration['description'],
                                 'Author'      => $migration['author'],
                             ];
@@ -226,27 +226,27 @@ class MigrateScript extends AbstractScript implements CronScriptInterface
             }
 
             try {
-                $this->migrator->up([$migration::DB_VERSION]);
+                $this->migrator->up([$migration->version()]);
             } catch (Exception $exception) {
                 // Do something
 
             }
 
-            $feedbacks = $this->migrator->feedback($migration::DB_VERSION);
+            $feedbacks = $this->migrator->feedback($migration->version());
             array_map([$this->climate(), 'info'], $feedbacks);
 
-            $errors = $this->migrator->errors($migration::DB_VERSION);
+            $errors = $this->migrator->errors($migration->version());
             if (!empty($errors)) {
                 // Prompt to continue or stop there
                 array_map([$this->climate(), 'error'], $errors);
 
                 $continue = $this->climate()
-                                 ->error('An error occurred while processing the migrtation : '.$migration::DB_VERSION)
+                                 ->error('An error occurred while processing the migration : '.$migration->version())
                                  ->confirm('Would you like to process the rest of the migrations?');
 
                 $processed[] = [
                     'status'      => '<red>ERROR</red>',
-                    'Version'     => $migration::DB_VERSION,
+                    'Version'     => $migration->version(),
                     'Description' => $migration['description'],
                     'Author'      => $migration['author'],
                 ];
@@ -259,7 +259,7 @@ class MigrateScript extends AbstractScript implements CronScriptInterface
 
             $processed[] = [
                 'status'      => '<green>PROCESSED</green>',
-                'Version'     => $migration::DB_VERSION,
+                'Version'     => $migration->version(),
                 'Description' => $migration['description'],
                 'Author'      => $migration['author'],
             ];

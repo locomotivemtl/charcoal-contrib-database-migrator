@@ -2,6 +2,7 @@
 
 namespace Charcoal\DatabaseMigrator\Service;
 
+use Charcoal\DatabaseMigrator\AbstractMigration;
 use PDO;
 
 /**
@@ -71,14 +72,14 @@ class Migrator
      */
     public function up(array $versions = []): void
     {
-        $availablePatches = $this->availableMigrations();
+        $availableMigrations = $this->availableMigrations();
 
-        foreach ($availablePatches as $patch) {
-            if (in_array($patch::DB_VERSION, $versions) || empty($versions)) {
-                $patch->up();
-                $this->addFeedback($patch::DB_VERSION, $patch->getFeedback());
-                $this->addErrors($patch::DB_VERSION, $patch->getErrors());
-                $this->updateDbVersionLog($patch::DB_VERSION);
+        foreach ($availableMigrations as $migration) {
+            if (in_array($migration->version(), $versions) || empty($versions)) {
+                $migration->up();
+                $this->addFeedback($migration->version(), $migration->getFeedback());
+                $this->addErrors($migration->version(), $migration->getErrors());
+                $this->updateDbVersionLog($migration->version());
             }
         }
     }
@@ -92,20 +93,20 @@ class Migrator
      */
     public function down(array $versions = []): void
     {
-        $availablePatches = $this->availableMigrations();
+        $availableMigrations = array_reverse($this->availableMigrations());
 
-        foreach ($availablePatches as $patch) {
-            if (in_array($patch::DB_VERSION, $versions) || empty($versions)) {
-                $patch->down();
-                $this->addFeedback($patch::DB_VERSION, $patch->getFeedback());
-                $this->addErrors($patch::DB_VERSION, $patch->getErrors());
-                $this->updateDbVersionLog($patch::DB_VERSION, self::DOWN_ACTION);
+        foreach ($availableMigrations as $migration) {
+            if (in_array($migration->version(), $versions) || empty($versions)) {
+                $migration->down();
+                $this->addFeedback($migration->version(), $migration->getFeedback());
+                $this->addErrors($migration->version(), $migration->getErrors());
+                $this->updateDbVersionLog($migration->version(), self::DOWN_ACTION);
             }
         }
     }
 
     /**
-     * @return array
+     * @return AbstractMigration[]
      */
     public function availableMigrations(): array
     {
@@ -120,7 +121,7 @@ class Migrator
         }
 
         $this->availableMigrations = array_filter($this->migrations(), function ($migration) use ($dbV) {
-            return $dbV < $migration::DB_VERSION;
+            return $dbV < $migration->version();
         });
 
         return $this->availableMigrations;
@@ -221,7 +222,7 @@ class Migrator
     }
 
     /**
-     * @return array
+     * @return AbstractMigration[]
      */
     protected function migrations(): array
     {
@@ -235,8 +236,8 @@ class Migrator
     protected function setMigrations($migrations): self
     {
         // Order from oldest to newest
-        usort($migrations, function ($item1, $item2) {
-            return ($item1::DB_VERSION <=> $item2::DB_VERSION);
+        usort($migrations, function (AbstractMigration $item1, AbstractMigration $item2) {
+            return ($item1->version() <=> $item2->version());
         });
         $this->migrations = $migrations;
 
