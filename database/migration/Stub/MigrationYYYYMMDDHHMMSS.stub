@@ -1,0 +1,49 @@
+<?php
+
+namespace Stub;
+
+use Charcoal\DatabaseMigrator\AbstractMigration;
+use Pimple\Container;
+
+/**
+ * Stub Migration
+ */
+final class MigrationYYYYMMDDHHMMSS extends AbstractMigration
+{
+    /**
+     * Inject dependencies from a DI Container.
+     *
+     * @param Container $container A Pimple DI service container.
+     * @return void
+     */
+    protected function setDependencies(Container $container): void
+    {
+    }
+
+    /**
+     * This method is stub.
+     * @return void
+     */
+    protected function init(): void
+    {
+    }
+
+    /**
+     * Apply migration
+     *
+     * @return void
+     */
+    public function up(): void
+    {
+    }
+
+    /**
+     * Short description of what the patch will do.
+     *
+     * @return string
+     */
+    public function description(): string
+    {
+        return 'This is an example migration that does nothing at all';
+    }
+}

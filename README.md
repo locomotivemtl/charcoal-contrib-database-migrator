@@ -98,16 +98,16 @@ The CLI UI will guide you step by step.
 
 A migration should always extend [**AbstractMigration**](src/Charcoal/DatabaseMigrator/AbstractMigration.php)
 
-[**GenericMigration**](database/migration/GenericMigration.php) can be used as a starting point when creating new migrations.
+[**MigrationYYYYMMDDHHMMSS.stub**](database/migration/Stub/MigrationYYYYMMDDHHMMSS.stub) can be used as a starting point when creating new migrations.
 Just copy and paste it the package in need of a new migration.
 
 A migration should always be named ``MigrationYYYYMMDDHHMMSS.php`` to facilitate readability.
 
 A migration file consist of a PHP class which follows these guidelines : 
 
-- Have a ``DB_VERSION`` const which equals the timestamp of the commit this migration is fixing
-- Have an ``up`` and ``down`` method for the migration tool to process the migration when going up in version or down.
-- Have a ``descripion`` and ``author`` method to briefly document the migration
+- Contains the timestamp of the commit this migration is fixing in the class name prefixed with `migration`
+- Have an ``up`` and optionally ``down`` methods for the migration tool to process the migration when going up in version or down.
+- Have a ``descripion`` method to briefly document the migration
 
 you can implement the setDependencies method on a migration.
 
@@ -124,6 +124,8 @@ you can implement the setDependencies method on a migration.
         // Reimplement in children method to inject dependencies in your class from a Pimple container.
     }
 ```
+
+You can also use the ``init()`` function to process data that is both needed in `up` and `down` methods.
 
 ### Injecting Migrations to the migrator
 
