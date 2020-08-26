@@ -8,8 +8,8 @@ use PDO;
 /**
  * Migrator Service
  *
- * Handle relation between current database version and patches to run
- * Also processes available patches
+ * Handle relation between current database version and migrations to run
+ * Also processes available migrations
  */
 class Migrator
 {
@@ -77,7 +77,7 @@ class Migrator
         foreach ($availableMigrations as $migration) {
             if (in_array($migration->version(), $versions) || empty($versions)) {
                 $migration->up();
-                $this->addFeedback($migration->version(), $migration->getFeedback());
+                $this->addFeedback($migration->version(), $migration->getFeedbacks());
                 $this->addErrors($migration->version(), $migration->getErrors());
                 $this->updateDbVersionLog($migration->version());
             }
@@ -98,7 +98,7 @@ class Migrator
         foreach ($availableMigrations as $migration) {
             if (in_array($migration->version(), $versions) || empty($versions)) {
                 $migration->down();
-                $this->addFeedback($migration->version(), $migration->getFeedback());
+                $this->addFeedback($migration->version(), $migration->getFeedbacks());
                 $this->addErrors($migration->version(), $migration->getErrors());
                 $this->updateDbVersionLog($migration->version(), self::DOWN_ACTION);
             }
@@ -117,10 +117,10 @@ class Migrator
         $dbV = $this->checkDbVersion();
 
         if ($dbV === 0) {
-            return $this->migrations();
+            return $this->getMigrations();
         }
 
-        $this->availableMigrations = array_filter($this->migrations(), function ($migration) use ($dbV) {
+        $this->availableMigrations = array_filter($this->getMigrations(), function ($migration) use ($dbV) {
             return $dbV < $migration->version();
         });
 
@@ -137,11 +137,11 @@ class Migrator
         }
 
         $q      = strtr('SHOW TABLES LIKE "%table"', ['%table' => self::DB_VERSION_TABLE_NAME]);
-        $sth    = $this->pdo()->query($q);
+        $sth    = $this->getPdo()->query($q);
         $exists = $sth->fetchColumn(0);
 
         if (!$exists) {
-            $this->pdo()->query($this->tableSkeleton());
+            $this->getPdo()->query($this->tableSkeleton());
             $this->dbVersion = 0;
 
             return $this->dbVersion;
@@ -152,7 +152,7 @@ class Migrator
             ['%table' => self::DB_VERSION_TABLE_NAME]
         );
 
-        $result = $this->pdo()->query($q)->fetch();
+        $result = $this->getPdo()->query($q)->fetch();
 
         $this->dbVersion = ($result['version'] ?? 0);
 
@@ -196,7 +196,7 @@ class Migrator
             ]
         );
 
-        $sth = $this->pdo()->prepare($q);
+        $sth = $this->getPdo()->prepare($q);
         $sth->bindParam(':version', $version, PDO::PARAM_STR);
         $sth->bindParam(':action', $action, PDO::PARAM_STR);
         $sth->execute();
@@ -205,7 +205,7 @@ class Migrator
     /**
      * @return PDO
      */
-    public function pdo(): PDO
+    public function getPdo(): PDO
     {
         return $this->pdo;
     }
@@ -224,7 +224,7 @@ class Migrator
     /**
      * @return AbstractMigration[]
      */
-    protected function migrations(): array
+    protected function getMigrations(): array
     {
         return $this->migrations;
     }
@@ -257,7 +257,7 @@ class Migrator
      * @param string|null $version The migration ident.
      * @return array
      */
-    public function feedback(string $version = null): array
+    public function getFeedback(string $version = null): array
     {
         return ($this->feedback[$version] ?? $this->feedback);
     }
@@ -292,7 +292,7 @@ class Migrator
      * @param string|null $version The migration ident.
      * @return array
      */
-    public function errors(string $version = null): array
+    public function getErrors(string $version = null): array
     {
         return ($this->errors[$version] ?? $this->errors);
     }

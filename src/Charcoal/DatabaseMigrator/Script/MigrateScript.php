@@ -181,7 +181,7 @@ class MigrateScript extends AbstractScript implements CronScriptInterface
 
         foreach ($migrations as $migration) {
             $progress->advance(1, sprintf(
-                'Processing migration : <blue>%s | %s | %s</blue>',
+                'Processing migration : <blue>%s | %s</blue>',
                 $migration->version(),
                 $migration->description()
             ));
@@ -229,10 +229,10 @@ class MigrateScript extends AbstractScript implements CronScriptInterface
 
             }
 
-            $feedbacks = $this->migrator->feedback($migration->version());
+            $feedbacks = $this->migrator->getFeedback($migration->version());
             array_map([$this->climate(), 'info'], $feedbacks);
 
-            $errors = $this->migrator->errors($migration->version());
+            $errors = $this->migrator->getErrors($migration->version());
             if (!empty($errors)) {
                 // Prompt to continue or stop there
                 array_map([$this->climate(), 'error'], $errors);

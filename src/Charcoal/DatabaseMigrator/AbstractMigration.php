@@ -4,8 +4,6 @@ namespace Charcoal\DatabaseMigrator;
 
 // from 'charcoal-app'
 use Charcoal\App\Config\DatabaseConfig;
-// from 'charcoal-config'
-use Charcoal\Config\AbstractEntity;
 // from 'charcoal-core'
 use Charcoal\Model\ModelInterface;
 use Charcoal\Source\DatabaseSource;
@@ -33,7 +31,7 @@ abstract class AbstractMigration
     /**
      * @var array
      */
-    protected $feedback = [];
+    protected $feedbacks = [];
 
     /**
      * @var array
@@ -77,7 +75,7 @@ abstract class AbstractMigration
     /**
      * @return PDO
      */
-    protected function pdo(): PDO
+    protected function getPdo(): PDO
     {
         return $this->pdo;
     }
@@ -96,7 +94,7 @@ abstract class AbstractMigration
     /**
      * @return DatabaseConfig
      */
-    protected function databaseConfig(): DatabaseConfig
+    protected function getDatabaseConfig(): DatabaseConfig
     {
         return $this->databaseConfig;
     }
@@ -134,7 +132,7 @@ abstract class AbstractMigration
      */
     protected function addFeedback(string $feedback): self
     {
-        $this->feedback[] = $feedback;
+        $this->feedbacks[] = $feedback;
 
         return $this;
     }
@@ -153,9 +151,9 @@ abstract class AbstractMigration
     /**
      * @return array
      */
-    public function getFeedback(): array
+    public function getFeedbacks(): array
     {
-        return $this->feedback;
+        return $this->feedbacks;
     }
 
     /**
@@ -172,7 +170,7 @@ abstract class AbstractMigration
      * @param Container $container A Pimple DI service container.
      * @return void
      */
-    protected function setDependencies(Container $container)
+    protected function setDependencies(Container $container): void
     {
         // This method is a stub.
         // Reimplement in children method to inject dependencies in your class from a Pimple container.
