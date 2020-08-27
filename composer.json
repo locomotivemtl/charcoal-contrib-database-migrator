@@ -1,7 +1,7 @@
 {
     "type": "library",
     "name": "locomotivemtl/charcoal-contrib-database-migrator",
-    "description": "Charcoal service provider database migration using patches.",
+    "description": "Charcoal service provider for database migrations.",
     "keywords": [
         "charcoal"
     ],
