@@ -77,7 +77,7 @@ class MigrationFinder
     public function findFiles($paths): array
     {
         $paths   = implode(',', (array)$paths);
-        $pattern = $this->getBasePath().'/{vendor/locomotivemtl/*/,}{'.$paths.'}/Migration*.php';
+        $pattern = $this->getBasePath().'{vendor/locomotivemtl/*/,}{'.$paths.'}/Migration*.php';
 
         return $this->glob($pattern);
     }
@@ -104,13 +104,9 @@ class MigrationFinder
     {
         $files = glob($pattern, $flags);
 
-        $level = 1;
-        foreach (glob(dirname($pattern).'/*', (GLOB_ONLYDIR | GLOB_NOSORT | GLOB_BRACE)) as $dir) {
-            $files = array_merge($files, $this->glob($dir.'/'.basename($pattern), $flags));
-
-            $level++;
-            if ($level >= $depth) {
-                break;
+        if ($depth > 0) {
+            foreach (glob(dirname($pattern).'/*', (GLOB_ONLYDIR | GLOB_NOSORT | GLOB_BRACE)) as $dir) {
+                $files = array_merge($files, $this->glob($dir.'/'.basename($pattern), $flags, $depth -1));
             }
         }
 
